@@ -47,25 +47,3 @@
     fix_crlfxy($_GET);
     fix_crlfxy($_POST);
     fix_crlfxy($_REQUEST);
-    if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) {
-
-    /**
-     * Recursively strip slashes from an array (eg. $_GET).
-     **/
-        function &fix_magic_quotes(&$array) {
-            foreach ($array as $key => $val) {
-                if (is_array($val))
-                    fix_magic_quotes($array[$key]);
-                else
-                    $array[$key] = stripslashes($val);
-            }
-            return $array;
-        }
-
-        fix_magic_quotes($_COOKIE);
-        fix_magic_quotes($_ENV);
-        fix_magic_quotes($_GET);
-        fix_magic_quotes($_POST);
-        fix_magic_quotes($_REQUEST);
-        fix_magic_quotes($_SERVER);
-    }

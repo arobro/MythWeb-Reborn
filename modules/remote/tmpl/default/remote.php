@@ -18,6 +18,14 @@
 // Print the page header
     require 'modules/_shared/tmpl/'.tmpl.'/header.php';
 
+// Safe check for active session frontends
+    $active_frontends = isset($_SESSION['remote']['frontends']) && is_array($_SESSION['remote']['frontends']) 
+        ? $_SESSION['remote']['frontends'] 
+        : array();
+
+// Safe check for Frontends variable
+    $Frontends = isset($Frontends) && is_array($Frontends) ? $Frontends : array();
+
 // Print the content itself
 ?>
 
@@ -27,8 +35,8 @@
 // List of enabled frontends
     var frontends = [<?php
         $hosts = array();
-        foreach (array_keys($_SESSION['remote']['frontends']) as $host) {
-            $hosts[] = "'$host'";
+        foreach (array_keys($active_frontends) as $host) {
+            $hosts[] = "'".addslashes($host)."'";
         }
         echo implode(',', $hosts);
         ?>];
@@ -99,9 +107,9 @@
         <div class="x-modules">
             <ul><?php
                 foreach (array_keys($Frontends) as $host) {
-                    echo '<li><a id="host_', $host, '"',
-                         ' onclick="handle_frontend(\'', $host, '\')"';
-                    if ($_SESSION['remote']['frontends'][$host])
+                    echo '<li><a id="host_', html_entities($host), '"',
+                         ' onclick="handle_frontend(\'', addslashes($host), '\')"';
+                    if (!empty($active_frontends[$host]))
                         echo ' class="x-selected"';
                     echo '>', html_entities($host), '</a></li>';
                 }
@@ -113,27 +121,33 @@
         </td>
     <td class="x-sections">
         <ul><?php
-            foreach (Modules::getModuleProperty('remote', 'links') as $link => $name) {
-                echo '<li><a href="', Modules::getModuleProperty('remote', 'path'), '/', $link, '"';
-                if ($link == $_REQUEST['type'])
-                    echo ' class="x-selected"';
-                echo '>', html_entities($name), '</a></li>';
+            $selected_type = isset($_REQUEST['type']) ? $_REQUEST['type'] : '';
+            $links = Modules::getModuleProperty('remote', 'links');
+            if (is_array($links)) {
+                foreach ($links as $link => $name) {
+                    echo '<li><a href="', Modules::getModuleProperty('remote', 'path'), '/', $link, '"';
+                    if ($link == $selected_type)
+                        echo ' class="x-selected"';
+                    echo '>', html_entities($name), '</a></li>';
+                }
             }
         ?></ul>
         </td>
 </tr><tr>
 <td class="x-content" colspan="2" valign="top">
 <?php
-    require_once tmpl_dir.'/'.$_REQUEST['type'].'.php';
+    if (!empty($selected_type)) {
+        require_once tmpl_dir.'/'.$selected_type.'.php';
+    }
 ?>
 </td>
 </tr><tr>
     <td class="x-screenshots" colspan="2">
         <ul style="list-style-type: none"><?php
             foreach (array_keys($Frontends) as $host) {
-                if (!$_SESSION['remote']['frontends'][$host])
+                if (empty($active_frontends[$host]))
                     continue;
-                echo '<li><img id="hostscreen_', $host, '" class="x-screenshot"',
+                echo '<li><img id="hostscreen_', html_entities($host), '" class="x-screenshot"',
                      ' src="', root, html_entities(Modules::getModuleProperty('remote', 'path').'/screenshot?format=jpg&width=960&host='.urlencode($host)),
                      '" /></li>';
             }

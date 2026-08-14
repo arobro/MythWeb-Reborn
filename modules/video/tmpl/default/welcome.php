@@ -10,7 +10,7 @@
 
 // Open with a div and an image
     echo '<div id="info_video" class="hidden">',
-         '<img src="', skin_url, '/img/video.png" class="module_icon" alt="">',
+         '<img src="', (defined('skin_url') ? skin_url : ''), '/img/video.png" class="module_icon" alt="">',
 
 // Print a basic overview of what this module does
          t('welcome: video'),

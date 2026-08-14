@@ -17,27 +17,22 @@
 */
 
 // Figure out the template
-    $tmpl = $_SESSION['tmpl'];
+    $tmpl = $_SESSION['tmpl'] ?? 'default';
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
     if (isset($_REQUEST['RESET_TMPL']))
         $tmpl = _or($_REQUEST['RESET_TMPL'], 'default');
     elseif (isset($_REQUEST['RESET_TEMPLATE']))
         $tmpl = _or($_REQUEST['RESET_TEMPLATE'], 'default');
-    elseif (isMobileUser())
-        $tmpl = 'wap';
-    elseif (preg_match('/^(Lynx|ELinks)/i', $_SERVER['HTTP_USER_AGENT']))
-        $tmpl = 'lite';
 
     if (!file_exists(modules_path.'/_shared/tmpl/'.$tmpl.'/welcome.php'))
         $tmpl = 'default';
 
 // Figure out the skin
-    $skin = $_SESSION['skin'];
+    $skin = $_SESSION['skin'] ?? 'default';
 
     if (isset($_REQUEST['RESET_SKIN']))
         $skin = _or($_REQUEST['RESET_SKIN'], 'default');
-    elseif (isMobileUser())
-        $skin = 'wap';
 
     if (!file_exists('skins/'.$skin.'/img/'))
         $skin = 'default';
@@ -45,7 +40,7 @@
 // We do want to over-ride the template for some paths.
 // We do this after setting because certain templates
 // Should never be stored as the normal end-user view
-    if ($Path[0] == 'rss' || $Path[0] == 'ical')
+    if (isset($Path[0]) && ($Path[0] == 'rss' || $Path[0] == 'ical'))
         $tmpl = $Path[0];
 
 // And now we define the paths

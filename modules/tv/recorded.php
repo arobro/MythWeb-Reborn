@@ -13,8 +13,8 @@
     require_once 'includes/sorting.php';
 
 // Delete or undelete a program?
-    if ($_REQUEST['delete'] || $_REQUEST['undelete']) {
-        if ($_REQUEST['delete'])
+    if (!empty($_REQUEST['delete']) || !empty($_REQUEST['undelete'])) {
+        if (!empty($_REQUEST['delete']))
           $backendstr = 'DELETE_RECORDING';
         else
           $backendstr = 'UNDELETE_RECORDING';
@@ -23,23 +23,23 @@
     // We need to scan through the available recordings to get at the additional information required by the DELETE_RECORDING query
         foreach (MythBackend::find()->queryProgramRows('QUERY_RECORDINGS Unsorted') as $row) {
         // increment if row has the same title as the show we're deleting or if viewing 'all recordings'
-            if (($_SESSION['recorded_title'] == $row[0]) || ($_SESSION['recorded_title'] == ''))
+            if ((isset($_SESSION['recorded_title']) && $_SESSION['recorded_title'] == $row[0]) || empty($_SESSION['recorded_title']))
                 $prev_row++;
         // This row isn't the one we're looking for
-            if ($row[8] != $_REQUEST['chanid'] || $row[27] != $_REQUEST['starttime'])
+            if ($row[8] != ($_REQUEST['chanid'] ?? null) || $row[27] != ($_REQUEST['starttime'] ?? null))
                 continue;
         // Delete the recording
             MythBackend::find()->sendCommand(array($backendstr, implode(MythBackend::$backend_separator, $row), '0'));
         // Forget all knowledge of old recordings?
-            if ($_REQUEST['forget_old']) {
+            if (!empty($_REQUEST['forget_old'])) {
                 MythBackend::find()->sendCommand(array('FORGET_RECORDING', implode(MythBackend::$backend_separator, $row), '0'));
                 MythBackend::find()->listenForEvent('SCHEDULE_CHANGE');
             }
         // Exit early if we're in AJAX mode.
             if (isset($_REQUEST['ajax'])) {
                 header('Content-Type: application/json');
-                echo json_encode(array('id'   => $_REQUEST['id'],
-                                       'file' => $_REQUEST['file']));
+                echo json_encode(array('id'   => $_REQUEST['id'] ?? null,
+                                       'file' => $_REQUEST['file'] ?? null));
                 exit;
             }
         // No need to scan the rest of the items, so leave early
@@ -54,8 +54,12 @@
     }
 
 // Queries for a specific program title
-    isset($_REQUEST['title'])    or $_REQUEST['title']    = isset($_REQUEST['refresh']) ? '' : $_SESSION['recorded_title'];
-    isset($_REQUEST['recgroup']) or $_REQUEST['recgroup'] = isset($_REQUEST['refresh']) ? '' : $_SESSION['recorded_recgroup'];
+    if (!isset($_REQUEST['title'])) {
+        $_REQUEST['title'] = isset($_REQUEST['refresh']) ? '' : ($_SESSION['recorded_title'] ?? '');
+    }
+    if (!isset($_REQUEST['recgroup'])) {
+        $_REQUEST['recgroup'] = isset($_REQUEST['refresh']) ? '' : ($_SESSION['recorded_recgroup'] ?? '');
+    }
 
 // Parse the program list
     $warning    = NULL;
@@ -85,39 +89,39 @@
             }
         // keep track of their names and how many episodes we have recorded
             $Total_Programs++;
-            $Groups[$record[30]]++;
+            $Groups[$record[30]] = ($Groups[$record[30]] ?? 0) + 1;
         // Hide LiveTV  and Deleted recordings from the title list
-            if (($_REQUEST['recgroup'] && $_REQUEST['recgroup'] == $record[30]) || (!$_REQUEST['recgroup'] && $record[30] != 'LiveTV' && $record[30] != 'Deleted'))
-                $Program_Titles[$record[0]]++;
+            if ((!empty($_REQUEST['recgroup']) && $_REQUEST['recgroup'] == $record[30]) || (empty($_REQUEST['recgroup']) && $record[30] != 'LiveTV' && $record[30] != 'Deleted'))
+                $Program_Titles[$record[0]] = ($Program_Titles[$record[0]] ?? 0) + 1;
         // Skip files with no chanid
             if (!$record[8])
                 continue;
         // Skip programs the user doesn't want to look at
-            if ($_REQUEST['title'] && $_REQUEST['title'] != $record[0])
+            if (!empty($_REQUEST['title']) && $_REQUEST['title'] != $record[0])
                 continue;
-            if ($_REQUEST['recgroup'] && $_REQUEST['recgroup'] != $record[30])
+            if (!empty($_REQUEST['recgroup']) && $_REQUEST['recgroup'] != $record[30])
                 continue;
         // Hide LiveTV recordings from the default view
             if (empty($_REQUEST['recgroup']) && ($record[30] == 'LiveTV' || $record[30] == 'Deleted'))
                 continue;
         // Make sure that everything we're dealing with is an array
-            if (!is_array($Programs[$record[0]]))
+            if (!isset($Programs[$record[0]]) || !is_array($Programs[$record[0]]))
                 $Programs[$record[0]] = array();
-        // Assign a reference to this show to the various arrays
+        // Assign show to the array
             $Programs[$record[0]][] = $record;
         }
     // Did we try to view a program that we don't have recorded?  Revert to showing all programs
         if ($Total_Programs > 0 && !count($Programs) && !isset($_REQUEST['refresh'])) {
         // Requested the "All" mode, but there are no recordings
             if (empty($_REQUEST['title']) && empty($_REQUEST['recgroup'])) {
-                if ($Groups['LiveTV'] > 0) {
+                if (($Groups['LiveTV'] ?? 0) > 0) {
                     $warning = t('Showing all programs from the $1 group.', 'LiveTV');
                     $_REQUEST['recgroup'] = 'LiveTV';
                     continue;
                 }
             }
         // Requested a title that's not in the requested group
-            if ($_REQUEST['recgroup'] && $_REQUEST['title'] && $Groups[$_REQUEST['recgroup']] > 0) {
+            if (!empty($_REQUEST['recgroup']) && !empty($_REQUEST['title']) && ($Groups[$_REQUEST['recgroup']] ?? 0) > 0) {
                 $warning = t('Showing all programs from the $1 group.', $_REQUEST['recgroup']);
                 unset($_REQUEST['title']);
                 unset($_SESSION['recorded_title']);
@@ -145,10 +149,12 @@
         // Create a new program object
             $show = new Program($record);
         // Assign a reference to this show to the various arrays
-            $All_Shows[]                                =& $show;
-            $Programs[$title][$key]                     =& $show;
-            $channel = &Channel::find($show->chanid);
-            $channel->programs[]                        =& $show;
+            $All_Shows[]            = $show;
+            $Programs[$title][$key] = $show;
+            $channel = Channel::find($show->chanid);
+            if ($channel) {
+                $channel->programs[] = $show;
+            }
             unset($show);
         }
     }
@@ -164,7 +170,7 @@
         $_SESSION['recorded_recgroup'] = $_REQUEST['recgroup'];
 
 // The default sorting choice isn't so good for recorded programs, so we'll set our own default
-    if (!is_array($_SESSION['recorded_sortby']) || !count($_SESSION['recorded_sortby']))
+    if (empty($_SESSION['recorded_sortby']) || !is_array($_SESSION['recorded_sortby']))
         $_SESSION['recorded_sortby'] = array(array('field' => 'airdate',
                                                    'reverse' => true),
                                              array('field' => 'title',

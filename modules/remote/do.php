@@ -8,29 +8,29 @@
  *
  **/
 
-    $frontend = $Frontends[$Path[2]];
+    $frontend = isset($Path[2]) ? $Frontends[$Path[2]] : null;
 
     if (!isset($frontend)) {
         header('HTTP/1.0 404 Not Found', true, 404);
         die(t('Unknown frontend'));
     }
 
-    $action   = $Path[3];
+    $action   = isset($Path[3]) ? $Path[3] : null;
     $parms    = array_slice($Path, 4);
 
     switch ($action) {
         case 'SendKey':
-            if (!$frontend->send_key($parms[0]))
+            if (isset($parms[0]) && !$frontend->send_key($parms[0]))
                 header('HTTP/1.0 400 Bad Request', true, 400);
             break;
 
         case 'PlayProgram':
-            if (!$frontend->play_program($parms[0], $parms[1]))
+            if (isset($parms[0], $parms[1]) && !$frontend->play_program($parms[0], $parms[1]))
                 header('HTTP/1.0 400 Bad Request', true, 400);
             break;
 
         case 'JumpTo':
-            if (!$frontend->send_jump($parms[0]))
+            if (isset($parms[0]) && !$frontend->send_jump($parms[0]))
                 header('HTTP/1.0 400 Bad Request', true, 400);
             break;
 
@@ -43,7 +43,8 @@
             break;
 
         case 'Query':
-            echo json_encode($frontend->query($parms[0]));
+            if (isset($parms[0]))
+                echo json_encode($frontend->query($parms[0]));
             break;
 
         default:

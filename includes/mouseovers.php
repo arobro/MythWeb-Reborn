@@ -41,7 +41,7 @@
     function show_help($link, $text, $url = '', $extras = '') {
         if ($url)
             $url = " href=\"$url\" ";
-        if (!$_SESSION['show help']) {
+        if (empty($_SESSION['show help'])) {
             if ($url || $extras)
                 echo "<a $url$extras>$link</a>";
             else
@@ -59,7 +59,7 @@
 */
     function generate_popup_menu($id, $css_class, $items, $overload = 0) {
         if ($overload >= 50) return '';
-        if (!count($items))  return '';
+        if (!is_array($items) || !count($items)) return '';
         if ($id && $overload == 0) {
             $text = "<script language=\"JavaScript\" type=\"text/javascript\">\n"
                    ."<!--\n"
@@ -84,14 +84,14 @@
                     $text .= ' class="sep"';
                 }
             // Print the content
-                if ($item['url'])
+                if (isset($item['url']) && $item['url'])
                     $text .= "><a href=\"".$item['url'].'">'.$item['name'].'</a>';
-                elseif ($item['click'])
+                elseif (isset($item['click']) && $item['click'])
                     $text .= '><a onclick="'.$item['click'].'">'.$item['name'].'</a>';
                 else
                     $text .= '>'.$item['name'];
             // Child menu?
-                if ($item['children'])
+                if (isset($item['children']) && $item['children'])
                     $text .= "\n".str_repeat('  ', $overload+2).generate_popup_menu('', '', $item['children'], $overload + 2)
                             .str_repeat('  ', $overload+2);
             // Close off the list item

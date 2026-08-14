@@ -8,8 +8,9 @@
  *
  **/
 
+#[\AllowDynamicProperties]
 class Schedule extends MythBase {
-    static private $scheduledRecordings;
+    private static $scheduledRecordings;
 
     public $recordid;
     public $type;
@@ -103,7 +104,7 @@ class Schedule extends MythBase {
     public static function findAll($sort = true) {
         global $db;
         $orderby = '';
-        if ($sort && is_array($_SESSION['schedules_sortby']) && count($_SESSION['schedules_sortby'])) {
+        if ($sort && !empty($_SESSION['schedules_sortby']) && is_array($_SESSION['schedules_sortby']) && count($_SESSION['schedules_sortby'])) {
             $orderby = 'ORDER BY ';
             foreach ($_SESSION['schedules_sortby'] AS $key => $sort) {
                 if ($key > 0)
@@ -113,10 +114,14 @@ class Schedule extends MythBase {
                         $orderby .= 'starttime';
                         break;
                     case 'callsign_with_type':
-                        $orderby .= 'CASE WHEN (type = '.rectype_always.' OR type = '.rectype_findone.') AND !(filter & (1 << 10)) THEN "" ELSE callsign END';
+                        $always_type = defined('rectype_always') ? rectype_always : 4;
+                        $findone_type = defined('rectype_findone') ? rectype_findone : 6;
+                        $orderby .= 'CASE WHEN (type = '.$always_type.' OR type = '.$findone_type.') AND !(filter & (1 << 10)) THEN "" ELSE callsign END';
                         break;
                     case 'channum_with_type':
-                        $orderby .= 'CASE WHEN (type = '.rectype_always.' OR type = '.rectype_findone.') AND !(filter & (1 << 10)) THEN 0 ELSE channum END';
+                        $always_type = defined('rectype_always') ? rectype_always : 4;
+                        $findone_type = defined('rectype_findone') ? rectype_findone : 6;
+                        $orderby .= 'CASE WHEN (type = '.$always_type.' OR type = '.$findone_type.') AND !(filter & (1 << 10)) THEN 0 ELSE channum END';
                         break;
                     case 'last_record':
                         $orderby .= 'record.last_record';
@@ -128,7 +133,7 @@ class Schedule extends MythBase {
                         $orderby .= $sort['field'];
                         break;
                 }
-                $orderby .= ($sort['reverse'] ? ' DESC' : ' ASC');
+                $orderby .= (!empty($sort['reverse']) ? ' DESC' : ' ASC');
             }
             $recordIds = $db->query("
                 SELECT    recordid
@@ -147,28 +152,33 @@ class Schedule extends MythBase {
 
     public static function &findScheduled() {
         if (is_null(self::$scheduledRecordings))
-            self::$scheduledRecordings =& Cache::get('Schedule::findScheduled');
+            self::$scheduledRecordings = Cache::get('Schedule::findScheduled');
 
         if (is_null(self::$scheduledRecordings)) {
-            foreach (MythBackend::find()->queryProgramRows('QUERY_GETALLPENDING', 2) as $key => $program) {
-                if ($key === 'offset')
-                    continue;
-                if ($program[22] == 6)
-                    continue;
-                // Normal entry:  $scheduledRecordings[callsign][starttime][]
-                self::$scheduledRecordings[$program[10]][$program[14]][] = new Program($program);
+            $programRows = MythBackend::find()->queryProgramRows('QUERY_GETALLPENDING', 2);
+            if (is_array($programRows) || is_object($programRows)) {
+                foreach ($programRows as $key => $program) {
+                    if ($key === 'offset')
+                        continue;
+                    if (isset($program[22]) && $program[22] == 6)
+                        continue;
+                    // Normal entry:  $scheduledRecordings[callsign][starttime][]
+                    self::$scheduledRecordings[$program[10]][$program[14]][] = new Program($program);
+                }
             }
             Cache::set('Schedule::findScheduled', self::$scheduledRecordings);
         }
-        if (is_null(self::$scheduledRecordings))
-            return array();
+        if (is_null(self::$scheduledRecordings)) {
+            $empty = array();
+            return $empty;
+        }
         return self::$scheduledRecordings;
     }
 
 /**
  * constructor
  **/
-    public function __construct($data) {
+    public function __construct($data = null) {
         global $db;
 
         $this->dupmethod = _or(setting('prefDupMethod'), 0);
@@ -176,10 +186,10 @@ class Schedule extends MythBase {
     // Schedule object data -- just copy it into place
         if (is_object($data)) {
         // Not the right type of object?
-            if (strcasecmp(get_class($data), 'schedule'))
-                trigger_error("Incorrect object of class ".get_class($data)." passed to new Schedule()", FATAL);
+            if (strcasecmp(get_class($data), 'schedule') !== 0)
+                trigger_error("Incorrect object of class ".get_class($data)." passed to new Schedule()", E_USER_ERROR);
         // Copy its variables into place
-            $a = @get_object_vars($data);
+            $a = get_object_vars($data);
             if (is_array($a) && count($a) > 0) {
                 foreach ($a as $key => $val) {
                     $this->$key = $val;
@@ -223,20 +233,21 @@ class Schedule extends MythBase {
         }
 
     // Custom power search needs to have fields split out
-        if ($this->search == searchtype_power) {
+        if (defined('searchtype_power') && $this->search == searchtype_power) {
             #########
             /** @todo actually split out the fields! */
         }
 
     // Add a generic "will record" variable, too
-        $this->will_record = ($this->type && $this->type != rectype_dontrec) ? true : false;
+        $this->will_record = ($this->type && defined('rectype_dontrec') && $this->type != rectype_dontrec) ? true : false;
 
     // Turn type into a word
-        $this->texttype = $GLOBALS['RecTypes'][$this->type];
+        if (isset($this->type) && isset($GLOBALS['RecTypes'][$this->type]))
+            $this->texttype = $GLOBALS['RecTypes'][$this->type];
 
     // Do we have a chanid?  Load some info about it
         if ($this->chanid > 0 && !isset($this->channel))
-            $this->channel =& Channel::find($this->chanid);
+            $this->channel = Channel::find($this->chanid);
 
     // Find out which css category this recording falls into
         if ($this->chanid != '')
@@ -246,15 +257,16 @@ class Schedule extends MythBase {
 /**
  * Alternative constructor for returning recording templates
  **/
-    static function recording_template($name) {
+    public static function recording_template($name) {
         global $db;
         $sched = new Schedule(NULL);
+        $template_type = defined('rectype_template') ? rectype_template : 0;
         $data = $db->query_assoc('
             SELECT *
             FROM   record
             WHERE  type = ?
             AND    title = ?',
-            rectype_template,
+            $template_type,
             $name.' (Template)'
         );
 
@@ -292,13 +304,13 @@ class Schedule extends MythBase {
     // Make sure that recordid is null if it's empty
         if (empty($this->recordid)) {
             $this->recordid = NULL;
-            $this->findid   = floor(date('U', $this->starttime)/60/60/24) + 719528;
+            $this->findid   = floor(date('U', (int)$this->starttime)/60/60/24) + 719528;
         // Only auto-default these properties if we're not dealing with a
         // search-based recording rule, otherwise take the values we
         // received from the custom schedule input form
             if (!$this->search) {
-                $this->findday  = (date('w', $this->starttime) + 1) % 7;
-                $this->findtime = date('G:i:s', $this->starttime);
+                $this->findday  = (date('w', (int)$this->starttime) + 1) % 7;
+                $this->findtime = date('G:i:s', (int)$this->starttime);
             }
         }
     // Changing the type of recording
@@ -309,7 +321,7 @@ class Schedule extends MythBase {
                 return;
             }
         // Changing from one override type to another -- delete the old entry, and then reset recordid so a new record is created
-            elseif ($new_type == rectype_override || $new_type == rectype_dontrec) {
+            elseif (defined('rectype_override') && defined('rectype_dontrec') && ($new_type == rectype_override || $new_type == rectype_dontrec)) {
             // Delete an old override schedule?
                 if ($this->type == rectype_override || $this->type == rectype_dontrec) {
                     $this->delete();
@@ -321,7 +333,8 @@ class Schedule extends MythBase {
     // Update the type, in case it changed
         $this->type = $new_type;
     // Clear the the search column for non-manual overrides.
-        if (($this->type == rectype_override || $this->type == rectype_dontrec)
+        if (defined('rectype_override') && defined('rectype_dontrec') && defined('searchtype_manual')
+            && ($this->type == rectype_override || $this->type == rectype_dontrec)
             && $this->search != searchtype_manual) {
             $this->search = 0;
         }
@@ -399,9 +412,9 @@ class Schedule extends MythBase {
             $this->recordid = $recordid;
     // Errors?
         if ($sh->affected_rows() < 1 || $recordid < 1)
-            trigger_error('Error creating recording schedule - no id was returned', FATAL);
+            trigger_error('Error creating recording schedule - no id was returned', E_USER_ERROR);
         elseif ($this->recordid && $this->recordid != $recordid)
-            trigger_error('Error updating recording schedule - different id was returned', FATAL);
+            trigger_error('Error updating recording schedule - different id was returned', E_USER_ERROR);
     // Finish
         $sh->finish();
     // Notify the backend of the changes
@@ -443,34 +456,43 @@ class Schedule extends MythBase {
               ."\t<dd>".html_entities($this->texttype)
                        ."</dd>\n";
     // Only show these fields for recording types where they're relevant
-        if (in_array($this->type, array(rectype_once, rectype_daily, rectype_weekly, rectype_override, rectype_dontrec))) {
+        $relevant_types = array(
+            defined('rectype_once') ? rectype_once : 1,
+            defined('rectype_daily') ? rectype_daily : 2,
+            defined('rectype_weekly') ? rectype_weekly : 5,
+            defined('rectype_override') ? rectype_override : 7,
+            defined('rectype_dontrec') ? rectype_dontrec : 8
+        );
+        if (in_array($this->type, $relevant_types)) {
         // Airtime
+            $date_fmt = !empty($_SESSION['date_scheduled_popup2']) ? $_SESSION['date_scheduled_popup2'] : 'Y-m-d';
+            $time_fmt = !empty($_SESSION['time_format2']) ? $_SESSION['time_format2'] : 'H:i';
             $str .= "\t<dt>".t('Airtime').":</dt>\n"
-                   ."\t<dd>".strftime($_SESSION['date_scheduled_popup'].', '.$_SESSION['time_format'], $this->starttime)
-                            .' to '
-                            .strftime($_SESSION['time_format'], $this->endtime)
+				."\t<dd>".date($date_fmt.', '.$time_fmt, (int)$this->starttime)
+							.' to '
+							.date($time_fmt, (int)$this->endtime)
                             ."</dd>\n";
         // Subtitle
-            if (preg_match('/\\S/', $this->subtitle)) {
+            if (preg_match('/\\S/', (string)$this->subtitle)) {
                 $str .= "\t<dt>".t('Subtitle').":</dt>\n"
                        ."\t<dd>".html_entities($this->subtitle)
                                 ."</dd>\n";
             }
         // Description
-            if (preg_match('/\\S/', $this->description)) {
+            if (preg_match('/\\S/', (string)$this->description)) {
                 $str .= "\t<dt>".t('Description').":</dt>\n"
                        ."\t<dd>".nl2br(html_entities($this->description))
                                 ."</dd>\n";
             }
         // Rating
-            if (preg_match('/\\S/', $this->rating)) {
+            if (isset($this->rating) && preg_match('/\\S/', (string)$this->rating)) {
                 $str .= "\t<dt>".t('Rating').":</dt>\n"
                        ."\t<dd>".html_entities($this->rating)
                                 ."</dd>\n";
             }
         }
     // Category
-        if (preg_match('/\\S/', $this->category)) {
+        if (preg_match('/\\S/', (string)$this->category)) {
             $str .= "\t<dt>".t('Category').":</dt>\n"
                    ."\t<dd>".html_entities($this->category)
                             ."</dd>\n";
@@ -486,13 +508,13 @@ class Schedule extends MythBase {
             $str .= "\t<dt>".t('Schedule').":</dt>\n"
                    ."\t<dd>";
             switch ($this->type) {
-                case rectype_once:       $str .= t('rectype-long: once');       break;
-                case rectype_daily:      $str .= t('rectype-long: daily');      break;
-                case rectype_always:     $str .= t('rectype-long: always');     break;
-                case rectype_weekly:     $str .= t('rectype-long: weekly');     break;
-                case rectype_findone:    $str .= t('rectype-long: findone');    break;
-                case rectype_override:   $str .= t('rectype-long: override');   break;
-                case rectype_dontrec:    $str .= t('rectype-long: dontrec');    break;
+                case defined('rectype_once') ? rectype_once : 1:       $str .= t('rectype-long: once');       break;
+                case defined('rectype_daily') ? rectype_daily : 2:      $str .= t('rectype-long: daily');      break;
+                case defined('rectype_always') ? rectype_always : 4:     $str .= t('rectype-long: always');     break;
+                case defined('rectype_weekly') ? rectype_weekly : 5:     $str .= t('rectype-long: weekly');     break;
+                case defined('rectype_findone') ? rectype_findone : 6:    $str .= t('rectype-long: findone');    break;
+                case defined('rectype_override') ? rectype_override : 7:   $str .= t('rectype-long: override');   break;
+                case defined('rectype_dontrec') ? rectype_dontrec : 8:    $str .= t('rectype-long: dontrec');    break;
                 default:                 $str .= t('Unknown');
             }
             $str .= "</dd>\n";
@@ -512,22 +534,22 @@ class Schedule extends MythBase {
             $str .= "</dd>\n";
         }
     // Recording Priority
-        if (preg_match('/\\S/', $this->recpriority)) {
+        if (preg_match('/\\S/', (string)$this->recpriority)) {
             $str .= "\t<dt>".t('Recording Priority').":</dt>\n"
                    ."\t<dd>".html_entities($this->recpriority)
                             ."</dd>\n";
         }
     // Profile
-        if (preg_match('/\\S/', $this->profile)) {
+        if (preg_match('/\\S/', (string)$this->profile)) {
             $str .= "\t<dt>".t('Profile').":</dt>\n"
                    ."\t<dd>".html_entities($this->profile)
                             ."</dd>\n";
         }
     // Transcoder
-        if (preg_match('/\\S/', $this->transcoder)) {
+        if (preg_match('/\\S/', (string)$this->transcoder)) {
             global $Transcoders;
             $str .= "\t<dt>".t('Transcoder').":</dt>\n"
-                   ."\t<dd>".html_entities(_or($Transcoders[$this->transcoder], '&nbsp;'))
+                   ."\t<dd>".html_entities(_or(isset($Transcoders[$this->transcoder]) ? $Transcoders[$this->transcoder] : null, '&nbsp;'))
                             ."</dd>\n";
         }
     // Recording Group
@@ -566,7 +588,7 @@ class Schedule extends MythBase {
     // Do PlayGroup titlematch
         if (is_array($playgroups) && count($playgroups) > 1 &&
             empty($this_playgroup) && is_object($schedule)) {
-            $this_playgroup =& $schedule->this_playgroup;
+            $this_playgroup = $schedule->this_playgroup;
             $sh = $db->query('SELECT DISTINCT name FROM playgroup
                               WHERE name = ? OR name = ? OR (titlematch <> "" AND ? REGEXP titlematch)
                               ORDER BY titlematch DESC',
@@ -613,12 +635,14 @@ class Schedule extends MythBase {
     function transcoder_select($this_transcoder, $name='transcoder') {
         global $Transcoders;
         echo "<select name=\"$name\">";
-        foreach ($Transcoders as $transcoderid => $transcoder) {
-            echo '<option value="'.html_entities($transcoderid).'"';
-            if ($this_transcoder == $transcoderid) {
-                echo ' SELECTED';
+        if (is_array($Transcoders) || is_object($Transcoders)) {
+            foreach ($Transcoders as $transcoderid => $transcoder) {
+                echo '<option value="'.html_entities($transcoderid).'"';
+                if ($this_transcoder == $transcoderid) {
+                    echo ' SELECTED';
+                }
+                echo '>'.html_entities($transcoder).'</option>';
             }
-            echo '>'.html_entities($transcoder).'</option>';
         }
         echo '</select>';
     }
@@ -628,7 +652,7 @@ class Schedule extends MythBase {
  **/
     function recgroup_select(&$schedule, $name = 'recgroup') {
         global $db;
-        $this_group =& $schedule->recgroup;
+        $this_group = $schedule->recgroup;
         static $groups = array();
     // Load the recording groups?
         if (!count($groups)) {
@@ -650,7 +674,7 @@ class Schedule extends MythBase {
         }
     // Guess at default. Try category match etc..
         if (count($groups) > 1 && empty($this_group)) {
-            $program = load_one_program($schedule->starttime, $schedule->chanid, $schedule->manualid);
+            $program = load_one_program($schedule->starttime, $schedule->chanid, isset($schedule->manualid) ? $schedule->manualid : null);
             $sh = $db->query('SELECT DISTINCT recgroup FROM record
                              WHERE recgroup REGEXP ? OR recgroup REGEXP ? OR recgroup REGEXP ?',
                              $schedule->category, $program->category_type, $schedule->station);
@@ -668,7 +692,7 @@ class Schedule extends MythBase {
                 echo ' SELECTED';
             echo '>', html_entities($group_name), '</option>';
         }
-        if (!$groups[$this_group]) {
+        if (!isset($groups[$this_group])) {
             echo '<option value="', html_entities($this_group), '" SELECTED',
                  '>', html_entities($this_group), '</option>';
         }
@@ -688,7 +712,7 @@ class Schedule extends MythBase {
         // Configured Storage Groups
             $sh = $db->query('SELECT DISTINCT groupname FROM storagegroup');
             while (list($group) = $sh->fetch_row()) {
-                $group or $group = 'Default';
+                $group = $group ? $group : 'Default';
                 $groups[$group]  = $group;
             }
             $sh->finish();

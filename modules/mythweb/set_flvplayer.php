@@ -10,22 +10,26 @@
  **/
 
 // Save?
-    if ($_POST['save']) {
-    // Validaton
-        if ($_POST['width'] < 1)
-            $_POST['width'] = 320;
-        elseif ($_POST['width'] < 160)
-            $_POST['width'] = 160;
+    if (!empty($_POST['save'])) {
+        $width    = (int)($_POST['width'] ?? 0);
+        $vbitrate = (int)($_POST['vbitrate'] ?? 0);
+        $abitrate = (int)($_POST['abitrate'] ?? 0);
+
+    // Validation
+        if ($width < 1)
+            $width = 320;
+        elseif ($width < 160)
+            $width = 160;
+
     // Turn on/off
-        setting('WebFLV_on', null, $_POST['flvplayer'] ? 1 : 0);
+        setting('WebFLV_on', null, !empty($_POST['flvplayer']) ? 1 : 0);
     // Dimensions...
-        setting('WebFLV_w',  null, $_POST['width']);
+        setting('WebFLV_w',  null, $width);
     // Bitrates
-        setting('WebFLV_vb', null, $_POST['vbitrate'] > 0 ? $_POST['vbitrate'] : 256);
-        setting('WebFLV_ab', null, $_POST['abitrate'] > 0 ? $_POST['abitrate'] : 64);
+        setting('WebFLV_vb', null, $vbitrate > 0 ? $vbitrate : 256);
+        setting('WebFLV_ab', null, $abitrate > 0 ? $abitrate : 64);
 
     }
 
 // These settings are limited to MythWeb itself
     $Settings_Hosts = 'MythWeb';
-

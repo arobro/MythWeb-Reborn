@@ -23,18 +23,19 @@
          title="<?php echo t('Enable Flash Video player for recordings.') ?>"
         <?php
             $ffmpeg = '';
-            foreach (preg_split ('/:/', getenv ('PATH').':/usr/local/bin:/usr/bin') as $path) {
-                if (file_exists ($path."/ffmpeg")) {
-                    $ffmpeg = $path."/ffmpeg";
+            $path_env = getenv('PATH') ?: '';
+            foreach (preg_split('/:/', $path_env . ':/usr/local/bin:/usr/bin') as $path) {
+                if (file_exists($path . "/ffmpeg")) {
+                    $ffmpeg = $path . "/ffmpeg";
                     break;
                 }
-                elseif (php_uname ('s') == 'Darwin' && file_exists ($path."/ffmpeg.app")) {
-                    $ffmpeg = $path."/ffmpeg.app";
+                elseif (php_uname('s') == 'Darwin' && file_exists($path . "/ffmpeg.app")) {
+                    $ffmpeg = $path . "/ffmpeg.app";
                     break;
                 }
             }
-            $ffmpeg_output = shell_exec ("$ffmpeg -formats 2>&1");
-            $has_mp3_support = preg_match('/E\s+mp3/', $ffmpeg_output);
+            $ffmpeg_output = !empty($ffmpeg) ? shell_exec("$ffmpeg -formats 2>&1") : '';
+            $has_mp3_support = !empty($ffmpeg_output) && preg_match('/E\s+mp3/', $ffmpeg_output);
             if (!$has_mp3_support)
                 echo ' DISABLED';
             if (setting('WebFLV_on'))

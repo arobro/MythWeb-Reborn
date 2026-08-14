@@ -6,6 +6,7 @@
  * @subpackage  TV
  **/
 
+    $Groups = array();
     $sh = $db->query('SELECT DISTINCT recorded.recgroup
                         FROM recorded');
     while ($group = $sh->fetch_col())

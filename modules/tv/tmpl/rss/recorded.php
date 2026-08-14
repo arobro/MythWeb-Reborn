@@ -17,7 +17,7 @@
     foreach ($All_Shows as $show) {
         $item = $Feed->createNewItem();
 
-        $item->setTitle($show->title.(strlen($show->subtitle) > 0 ? ' - '.$show->subtitle : ''));
+        $item->setTitle($show->title.(strlen($show->subtitle ?? '') > 0 ? ' - '.$show->subtitle : ''));
         $item->setLink(root_url.'tv/detail/'.$show->chanid.'/'.$show->recstartts);
         $item->setDate($show->starttime);
         $item->setDescription($show->description);

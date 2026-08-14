@@ -20,7 +20,7 @@
          '<ul>';
     foreach ($Settings as $module => $set) {
         echo '    <li><a href="', root_url, Modules::getModuleProperty('settings', 'path'), '/', $module, '">', $set['name'], "</a>\n";
-        if (count($set['choices']) > 1) {
+        if (is_countable($set['choices']) && count($set['choices']) > 1) {
             echo "        <ul>\n";
             foreach ($set['choices'] as $section => $name) {
                 echo '            <li><a href="', root_url, Modules::getModuleProperty('settings', 'path'), '/', $module, '/', $section, '">', $name, "</a></li>\n";

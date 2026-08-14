@@ -10,7 +10,7 @@
  **/
 ?>
 
-<form class="form" method="post" action="<?php echo form_action ?>">
+<form class="form" method="post" action="<?php echo defined('form_action') ? form_action : '' ?>">
     <?php
         foreach ($Screens as $screen => $options) {
             ?>
@@ -19,7 +19,7 @@
                     <?php
                         foreach($options as $option) {
                             echo '<input type="checkbox" name="'.$screen.'['.$option.']" id="'.$screen.'['.$option.']" ';
-                            if ($_SESSION['settings']['screens']['tv'][$screen][$option] == 'on')
+                            if (isset($_SESSION['settings']['screens']['tv'][$screen][$option]) && $_SESSION['settings']['screens']['tv'][$screen][$option] == 'on')
                                 echo 'checked';
                             echo '> <label for="'.$screen.'['.$option.']">'.t(ucwords($option)).'</label><br />';
                         }

@@ -5,8 +5,11 @@
     header('Expires: '.date('D, d M Y H:i:s e', time() + 7200));
     header('Content-Type: application/json');
 
-    $program = load_one_program($_REQUEST['starttime'], $_REQUEST['chanid'], false);
+    $starttime = $_REQUEST['starttime'] ?? null;
+    $chanid    = $_REQUEST['chanid'] ?? null;
 
-    echo json_encode(array( 'id'               => 'program-'.$_REQUEST['chanid'].'-'.$_REQUEST['starttime'],
-                             'info'             => $program->details_list()
+    $program = load_one_program($starttime, $chanid, false);
+
+    echo json_encode(array( 'id'               => 'program-'.$chanid.'-'.$starttime,
+                             'info'             => $program ? $program->details_list() : null
                            ));

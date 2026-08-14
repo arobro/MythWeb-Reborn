@@ -27,7 +27,7 @@
     }
 
 // Print the page contents
-    $group_field = $_GET['sortby'];
+    $group_field = $_GET['sortby'] ?? '';
     if ($group_field == 'title' || !in_array($group_field, array('title', 'callsign', 'channum', 'type', 'profile', 'recgroup')))
         $group_field = '';
 ?>
@@ -73,7 +73,7 @@
     <?php if ($group_field != '') echo "<th class=\"list\">&nbsp;</th>\n"; ?>
     <th class="x-title"><?php      echo get_sort_link('title', t('Title' ));              ?></th>
     <th class="x-priority"><?php   echo get_sort_link('recpriority', t('Recording Priority' )); ?></th>
-    <th class="x-channel"><?php    echo get_sort_link($_SESSION["prefer_channum"] ? 'channum_with_type' : 'callsign_with_type', t('Channel' ));            ?></th>
+    <th class="x-channel"><?php    echo get_sort_link(!empty($_SESSION["prefer_channum"]) ? 'channum_with_type' : 'callsign_with_type', t('Channel' ));            ?></th>
     <th class="x-profile"><?php    echo get_sort_link('profile', t('Profile' ));            ?></th>
     <th class="x-transcoder"><?php echo get_sort_link('transcoder', t('Transcoder'));          ?></th>
     <th class="x-group"><?php      echo get_sort_link('recgroup', t('Recording Group'));     ?></th>
@@ -102,7 +102,7 @@
                 $any_channel = false;
             }
         // A program id counter for popup info
-            if ($_SESSION["show_popup_info"]) {
+            if (!empty($_SESSION["show_popup_info"])) {
                 static $program_id_counter = 0;
                 $program_id_counter++;
             }
@@ -121,7 +121,7 @@
             elseif ($group_field == 'storagegroup')
                 $cur_group = $schedule->storagegroup;
         // "none"?
-            $cur_group or $cur_group = t('None');
+            $cur_group = $cur_group ?: t('None');
 
             $style_class = $schedule->css_class;
             if ($schedule->type == rectype_override)
@@ -142,7 +142,7 @@
             $wstatus = "Details for $schedule->title";
         // Print a link to the program detail for this schedule
             echo '<a id="schedule-'.$schedule->recordid.'"';
-            if ($_SESSION["show_popup_info"]) {
+            if (!empty($_SESSION["show_popup_info"])) {
                 echo ' onmouseover = "currently_hovered_id = this.id; details_delay_timer_id = setTimeout(function () {load_tool_tip(\'schedule-'.$schedule->recordid.'\',\''.$schedule->recordid.'\');}, 250);"';
                 echo ' onmouseout  = "currently_hovered_id = null; clearTimeout( details_delay_timer_id ); details_delay_timer_id = null;"';
             }
@@ -169,7 +169,7 @@
             if ($any_channel) {
                 echo '[ '.t('Any').' ]';
             } else {
-                if ($_SESSION["prefer_channum"]) {
+                if (!empty($_SESSION["prefer_channum"])) {
                     if ($schedule->channel->channum)
                         echo $schedule->channel->channum.' - ';
                 }
@@ -183,7 +183,7 @@
     <td class="x-profile"><?php echo _or($schedule->profile,  '&nbsp;') ?></td>
     <td class="x-transcoder"><?php
         global $Transcoders;
-        echo _or($Transcoders[$schedule->transcoder],  '&nbsp;')
+        echo _or($Transcoders[$schedule->transcoder] ?? null,  '&nbsp;')
         ?></td>
     <td class="x-group"><?php echo _or($schedule->recgroup, '&nbsp;') ?></td>
     <td class="x-type"><?php  echo $schedule->texttype ?></td>

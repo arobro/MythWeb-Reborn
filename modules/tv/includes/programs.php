@@ -61,12 +61,12 @@
 /**
  * a shortcut to load_all_program_data's single-program query
  **/
-    function &load_one_program($start_time, $chanid, $manualid) {
+    function load_one_program($start_time, $chanid, $manualid) {
         if ($manualid)
-            $program =& load_all_program_data($start_time, $start_time, $chanid, true, 'program.manualid='.intval($manualid));
+            $program = load_all_program_data($start_time, $start_time, $chanid, true, 'program.manualid='.intval($manualid));
         else
-            $program =& load_all_program_data($start_time, $start_time, $chanid, true);
-        if (!is_object($program) || strcasecmp(get_class($program), 'program'))
+            $program = load_all_program_data($start_time, $start_time, $chanid, true);
+        if (!is_object($program) || !($program instanceof Program))
             return NULL;
         return $program;
     }
@@ -76,7 +76,7 @@
  * Set $single_program to true if you only want information about programs that
  * start exactly at $start_time (used by program_detail.php)
  **/
-    function &load_all_program_data($start_time, $end_time, $chanid = false, $single_program = false, $extra_query = '', $distinctTitle = false) {
+    function load_all_program_data($start_time, $end_time, $chanid = false, $single_program = false, $extra_query = '', $distinctTitle = false) {
         global $db;
     // Don't allow negative timestamps; it confuses MySQL
         if ($start_time < 0)
@@ -88,13 +88,14 @@
     // that the user can sort by chanid or channum).
         $channel_hash = array();
     // An array (that later gets converted to a string) containing the id's of channels we want to load
+        $these_channels = array();
         if ($chanid)
             $these_channels[] = $chanid;
         else
             $these_channels = Channel::getChannelList();
     // convert $these_channels into a string so it'll go straight into the query
         if (!count($these_channels))
-            trigger_error("load_all_program_data() attempted with out any channels", FATAL);
+            trigger_error("load_all_program_data() attempted with out any channels", E_USER_ERROR);
         $these_channels = implode(',', $these_channels);
     // Build the sql query, and execute it
     // The weird stuff with pr1 and pr2 is to eliminate the mutiple ratings
@@ -180,29 +181,31 @@
             if (!$data['chanid'])
                 continue;
         // This program has already been loaded, and is attached to a recording schedule
-            if (!empty($data['title']) && $scheduledRecordings[$data['callsign']][$data['starttime_unix']][0]->title == $data['title']) {
-                $program =& $scheduledRecordings[$data['callsign']][$data['starttime_unix']][0];
+            if (!empty($data['title']) && isset($scheduledRecordings[$data['callsign']][$data['starttime_unix']][0]) && $scheduledRecordings[$data['callsign']][$data['starttime_unix']][0]->title == $data['title']) {
+                $program = $scheduledRecordings[$data['callsign']][$data['starttime_unix']][0];
             // merge in data fetched from DB
                 $program->merge(new Program($data));
             }
         // Otherwise, create a new instance of the program
             else {
             // Load the recstatus now that we can use an index
-                if ($data['programid'] && $data['seriesid']) {
+                if (!empty($data['programid']) && !empty($data['seriesid'])) {
                    $sh2->execute($data['programid'], $data['seriesid']);
                    list($data['recstatus']) = $sh2->fetch_row();
                 }
-                elseif ($data['category_type'] == 'movie' || ($data['title'] && $data['subtitle'] && $data['description'])) {
+                elseif ((isset($data['category_type']) && $data['category_type'] == 'movie') || (!empty($data['title']) && !empty($data['subtitle']) && !empty($data['description']))) {
                    $sh3->execute($data['title'], $data['subtitle'], $data['description']);
                    list($data['recstatus']) = $sh3->fetch_row();
                 }
             // Create a new instance
-                $program =& Program::find($data);
+                $program = Program::find($data);
             }
         // Add this program to the channel hash, etc.
-            $these_programs[]                          =& $program;
-            $channel_hash[$data['chanid']]             =  new stdClass();
-            $channel_hash[$data['chanid']]->programs[] =& $program;
+            $these_programs[]                          = $program;
+            if (!isset($channel_hash[$data['chanid']])) {
+                $channel_hash[$data['chanid']]         = new stdClass();
+            }
+            $channel_hash[$data['chanid']]->programs[] = $program;
         // Cleanup
             unset($program);
         }

@@ -10,7 +10,7 @@
  **/
 
 // Set the desired page title
-    $page_title = 'MythWeb - ' . t('Program Listing') . ': '.strftime($_SESSION['date_statusbar'], $list_starttime);
+	$page_title = 'MythWeb - ' . t('Program Listing') . ': ' . date($_SESSION['date_statusbar2'], $list_starttime);
 
 // Custom headers
     $headers[] = '<link rel="stylesheet" type="text/css" href="'.skin_url.'/tv_list.css">';

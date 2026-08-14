@@ -17,6 +17,12 @@
  *
  **/
 
+// Fallback constants for byte sizes if not already defined
+if (!defined('kb')) define('kb', 1024);
+if (!defined('mb')) define('mb', 1048576);
+if (!defined('gb')) define('gb', 1073741824);
+if (!defined('tb')) define('tb', 1099511627776);
+
 /**
  * Get or set a database setting.
  *
@@ -163,12 +169,13 @@
  * Converts an sql timestamp into unixtime
  **/
     function unixtime($sql_timestamp) {
-        return gmmktime(substr($sql_timestamp, 8,  2),    // hour
-                        substr($sql_timestamp, 10, 2),    // minute
-                        substr($sql_timestamp, 12, 2),    // second
-                        substr($sql_timestamp, 4,  2),    // month
-                        substr($sql_timestamp, 6,  2),    // day
-                        substr($sql_timestamp, 0,  4));   // year
+        if (strlen($sql_timestamp ?? '') < 14) return 0;
+        return gmmktime((int)substr($sql_timestamp, 8,  2),    // hour
+                        (int)substr($sql_timestamp, 10, 2),    // minute
+                        (int)substr($sql_timestamp, 12, 2),    // second
+                        (int)substr($sql_timestamp, 4,  2),    // month
+                        (int)substr($sql_timestamp, 6,  2),    // day
+                        (int)substr($sql_timestamp, 0,  4));   // year
     }
 
 /**
@@ -191,7 +198,7 @@
  * @return UTF-8 entities for $str
  **/
     function html_entities($str) {
-        return htmlentities($str, ENT_COMPAT, 'UTF-8');
+        return htmlentities($str ?? '', ENT_COMPAT, 'UTF-8');
     }
 
 /**
@@ -199,13 +206,16 @@
  **/
     function get_sorted_files($dir = '.', $regex = '', $negate = false) {
         $list = array();
+        if (!is_dir($dir)) return $list;
         $handle = opendir($dir);
-        while(false != ($file = readdir($handle))) {
-            if ($file == '.' || $file == '..') continue;
-            if (!$regex || (!$negate && preg_match($regex, $file)) || ($negate && !preg_match($regex, $file)))
-                $list[] = $file;
+        if ($handle) {
+            while(false !== ($file = readdir($handle))) {
+                if ($file == '.' || $file == '..') continue;
+                if (!$regex || (!$negate && preg_match($regex, $file)) || ($negate && !preg_match($regex, $file)))
+                    $list[] = $file;
+            }
+            closedir($handle);
         }
-        closedir($handle);
         sort($list);
         return $list;
     }
@@ -234,7 +244,7 @@
  **/
     function video_url($show, $ext = false) {
     // URL override?
-        if (!$ext && $_SESSION['file_url_override'])
+        if (!$ext && !empty($_SESSION['file_url_override']))
             return 'file://'.$_SESSION['file_url_override'].str_replace('%2F', '/', rawurlencode(basename($show->filename)));
     // Which protocol should we use for downloads?
 
@@ -255,14 +265,15 @@
  * @return $str converted UTF-8 to local encoding
  **/
     function utf8tolocal($str) {
-        if (empty($_SERVER['fs_encoding']))
+        $fs_encoding = $_SERVER['fs_encoding'] ?? '';
+        if (empty($fs_encoding))
             return $str;
         if (function_exists('mb_convert_encoding'))
-            return mb_convert_encoding($str, $_SERVER['fs_encoding'], 'UTF-8');
+            return mb_convert_encoding($str, $fs_encoding, 'UTF-8');
         if (function_exists('iconv'))
-            return iconv('UTF-8', $_SERVER['fs_encoding'], $str);
+            return iconv('UTF-8', $fs_encoding, $str);
         if (function_exists('recode_string'))
-            return recode_string('UTF-8..' . $_SERVER['fs_encoding'], $str);
+            return recode_string('UTF-8..' . $fs_encoding, $str);
         return $str;
     }
 
@@ -275,13 +286,16 @@
             $str = print_r($data, TRUE);
         elseif (isset($data))
             $str = $data;
+        else
+            $str = '';
+
         $search = array("\n", '"');
         $replace = array("\\n", '\"');
         $back_trace = debug_backtrace();
     // If this is a string, int or float
         if (is_string($str) || is_int($str) || is_float($str)) {
         // Allow XML/HTML to be treated as normal text
-            $str = htmlspecialchars($str, ENT_NOQUOTES);
+            $str = htmlspecialchars((string)$str, ENT_NOQUOTES);
         }
     // If this is a boolean
         elseif (is_bool($str))
@@ -294,15 +308,17 @@
         else
             $str = '<i>Type : '.gettype($str).'</i>';
     // Show which line caused the debug message
-        $str = $str."\n<hr>\n".'Line #'.$back_trace[0]['line'].' in file '.$back_trace[0]['file']."\n";
+        $str = $str."\n<hr>\n".'Line #'.($back_trace[0]['line'] ?? 'unknown').' in file '.($back_trace[0]['file'] ?? 'unknown')."\n";
     // Print the message
         echo '<script type="text/javascript">console.log("'.str_replace($search, $replace, $str).'");</script>';
         echo '<noscript><pre>'.$str.'</pre></noscript>';
     // Print to a file?
         if ($file) {
             $out = fopen('/tmp/debug.txt', 'a');
-            fwrite($out, "$str\n");
-            fclose($out);
+            if ($out) {
+                fwrite($out, "$str\n");
+                fclose($out);
+            }
         }
     }
 
@@ -317,9 +333,9 @@
  * 1.0 cvs changed the format to:  2003-06-28T06:30:00
  **/
     function myth2unixtime($mythtime) {
-        if (strlen($mythtime) < 1)
+        if (strlen($mythtime ?? '') < 1)
             return '';
-        return strtotime(str_replace('T', ' ', $mythtime), "UTC");
+        return strtotime(str_replace('T', ' ', $mythtime), strtotime("UTC"));
     }
 
 /**

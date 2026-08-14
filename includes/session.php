@@ -33,7 +33,9 @@
 // PHP are smoking something and think objects should be destroyed before the
 // sessions get written:  http://us2.php.net/session_set_save_handler
     global $db;
-    $db->register_destruct_handler('session_write_close');
+    if (is_object($db) && method_exists($db, 'register_destruct_handler')) {
+        $db->register_destruct_handler('session_write_close');
+    }
 
 /*
  *  The functions defined below are referenced above in session_set_save_handler()
@@ -51,8 +53,9 @@
  **/
     function sess_read($id) {
         global $db;
-        if (!empty($_SERVER['REMOTE_USER']))
-            $id = 'user:'.$_SERVER['REMOTE_USER'];
+        $remote_user = $_SERVER['REMOTE_USER'] ?? '';
+        if (!empty($remote_user))
+            $id = 'user:'.$remote_user;
         $data = $db->query_col('SELECT data
                                   FROM mythweb_sessions
                                  WHERE id = ?
@@ -62,7 +65,7 @@
                                $id
                                );
         if ($data)
-            return $data;
+            return (string)$data;
 
         return '';
     }
@@ -74,8 +77,9 @@
         global $db;
         if (empty($db))
             return false;
-        if (!empty($_SERVER['REMOTE_USER']))
-            $id = 'user:'.$_SERVER['REMOTE_USER'];
+        $remote_user = $_SERVER['REMOTE_USER'] ?? '';
+        if (!empty($remote_user))
+            $id = 'user:'.$remote_user;
         $db->query('REPLACE INTO mythweb_sessions (id, modified, data) VALUES (?,CURRENT_TIMESTAMP,?)',
                    $id, $data);
         if (!$db->affected_rows())
@@ -89,8 +93,9 @@
  **/
     function sess_destroy($id) {
         global $db;
-        if (!empty($_SERVER['REMOTE_USER']))
-            $id = 'user:'.$_SERVER['REMOTE_USER'];
+        $remote_user = $_SERVER['REMOTE_USER'] ?? '';
+        if (!empty($remote_user))
+            $id = 'user:'.$remote_user;
         $db->query('DELETE FROM mythweb_sessions WHERE id=?', $id);
         if (!$db->affected_rows())
             return true;

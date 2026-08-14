@@ -204,16 +204,16 @@ class Translate extends MythBase {
 
     // Generate the date formats
         $session = array();
-        $session['date_statusbar']       = $this->string('generic_date').', '.$this->string('generic_time');
-        $session['date_scheduled']       = $this->string('generic_date').' ('.$this->string('generic_time').')';
-        $session['date_scheduled_popup'] = $this->string('generic_date');
-        $session['date_recorded']        = $this->string('generic_date').' ('.$this->string('generic_time').')';
-        $session['date_search']          = $this->string('generic_date').', '.$this->string('generic_time');
-        $session['date_listing_key']     = $this->string('generic_date').', '.$this->string('generic_time');
-        $session['date_listing_jump']    = $this->string('generic_date');
-        $session['date_channel_jump']    = $this->string('generic_date');
-        $session['date_job_status']      = $this->string('generic_date').', '.$this->string('generic_time');
-        $session['time_format']          = $this->string('generic_time');
+        $session['date_statusbar2']       = ConvertDateFormat::convert($this->string('generic_date').', '.$this->string('generic_time'));
+        $session['date_scheduled2']       = ConvertDateFormat::convert($this->string('generic_date').' ('.$this->string('generic_time').')');
+        $session['date_scheduled_popup2'] = ConvertDateFormat::convert($this->string('generic_date'));
+        $session['date_recorded2']        = ConvertDateFormat::convert($this->string('generic_date').' ('.$this->string('generic_time').')');
+        $session['date_search2']          = ConvertDateFormat::convert($this->string('generic_date').', '.$this->string('generic_time'));
+        $session['date_listing_key2']     = ConvertDateFormat::convert($this->string('generic_date').', '.$this->string('generic_time'));
+        $session['date_listing_jump2']    = ConvertDateFormat::convert($this->string('generic_date'));
+        $session['date_channel_jump2']    = ConvertDateFormat::convert($this->string('generic_date'));
+        $session['date_job_status2']      = ConvertDateFormat::convert($this->string('generic_date').', '.$this->string('generic_time'));
+        $session['time_format2']          = ConvertDateFormat::convert($this->string('generic_time'));
 
         foreach ($session as $key => $value)
             if (!isset($_SESSION[$key]) || $_SESSION[$key] == '')

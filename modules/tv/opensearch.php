@@ -2,15 +2,15 @@
 /**
  * An OpenSearch system for suggesting program names from the firefox toolbar
  *
- * @license     GPL
+ * @license     GPL
  *
- * @package     MythWeb
- * @subpackage  TV
+ * @package     MythWeb
+ * @subpackage  TV
  *
  **/
 
 // Requesting information about the search query itself
-    if ($_REQUEST['type'] == 'xml') {
+    if (isset($_REQUEST['type']) && $_REQUEST['type'] == 'xml') {
         header("Content-Type: application/xml");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 ?>
@@ -31,7 +31,7 @@
     }
 
 // Requesting a search suggestion
-    elseif ($_REQUEST['type'] == 'suggest') {
+    elseif (isset($_REQUEST['type']) && $_REQUEST['type'] == 'suggest') {
     // Error notification
         if (!isset($_REQUEST['search'])) {
             echo "ERROR: Must have a search term";
@@ -47,12 +47,14 @@
     // Print the list of found suggestions
         $comma = false;
         echo '["', addslashes($_REQUEST['search']), '",[';
-        foreach ($matches as $match) {
-            if ($comma)
-                echo ',';
-            else
-                $comma = true;
-            echo '"', addslashes($match),'"';
+        if (is_array($matches)) {
+            foreach ($matches as $match) {
+                if ($comma)
+                    echo ',';
+                else
+                    $comma = true;
+                echo '"', addslashes($match),'"';
+            }
         }
         echo ']]';
     }

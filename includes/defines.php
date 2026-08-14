@@ -129,9 +129,9 @@
     if (isset($_SERVER['PHP_AUTH_PW']))
         $_SERVER['PHP_AUTH_PW'] = urlencode($_SERVER['PHP_AUTH_PW']);
 
-    if (!ini_get('safe_mode') && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']))
+    if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']))
         $root_auth_url .= $_SERVER['PHP_AUTH_USER'].':'.$_SERVER['PHP_AUTH_PW'].'@';
-    elseif (!ini_get('safe_mode') && isset($_SERVER['PHP_AUTH_USER']))
+    elseif (isset($_SERVER['PHP_AUTH_USER']))
         $root_auth_url .= $_SERVER['PHP_AUTH_USER'].'@';
 
     $root_url .= http_host.root;
@@ -149,9 +149,9 @@
     if (@$_SERVER['HTTPS'] == 'on' && !@$_SESSION['stream']['force_http'])
         $stream_url .='s';
     $stream_url .= '://';
-    if (@$_SESSION['stream']['include_user_and_password'] && !ini_get('safe_mode') && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']))
+    if (@$_SESSION['stream']['include_user_and_password'] && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']))
         $stream_url .= $_SERVER['PHP_AUTH_USER'].':'.$_SERVER['PHP_AUTH_PW'].'@';
-    elseif (@$_SESSION['stream']['include_user_and_password'] && !ini_get('safe_mode') && isset($_SERVER['PHP_AUTH_USER']))
+    elseif (@$_SESSION['stream']['include_user_and_password'] && isset($_SERVER['PHP_AUTH_USER']))
         $stream_url .= $_SERVER['PHP_AUTH_USER'].'@';
     $stream_url .= $_SERVER['HTTP_HOST'];
     if (@$_SESSION['stream']['force_http'] && @$_SESSION['stream']['force_http_port'] > 0)

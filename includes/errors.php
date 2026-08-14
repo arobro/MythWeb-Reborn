@@ -52,11 +52,12 @@
     set_error_handler('error_handler');
 
 // Active assert and make it quiet
-    assert_options(ASSERT_ACTIVE,     1);
-    assert_options(ASSERT_WARNING,    0);
-    if (defined('ASSERT_QUIET_EVAL')) assert_options(ASSERT_QUIET_EVAL, 1);
-// Set up the callback
-    assert_options(ASSERT_CALLBACK, 'assert_handler');
+    if (function_exists('assert_options') && version_compare(PHP_VERSION, '8.3.0', '<')) {
+        @assert_options(ASSERT_ACTIVE,     1);
+        @assert_options(ASSERT_WARNING,    0);
+        if (defined('ASSERT_QUIET_EVAL')) @assert_options(ASSERT_QUIET_EVAL, 1);
+        @assert_options(ASSERT_CALLBACK, 'assert_handler');
+    }
 
 /**
  * This user-defined assert handler sends an email with the assert info, and
@@ -108,7 +109,7 @@
  *  email message to the address stored in Error_Email, which is defined in
  *  conf.php.
  **/
-    function error_handler($errno, $errstr, $errfile, $errline, $vars = null) {
+    function error_handler($errno, $errstr, $errfile, $errline) {
         global $db;
     // Leave early if we haven't requested reports from this kind of error
         if (!($errno & error_reporting()))
@@ -128,7 +129,7 @@
         // What type of error?
             $subject = 'FATAL Error';
         // Email a backtrace
-            $err = build_backtrace($errno, $errstr, $errfile, $errline, $vars);
+            $err = build_backtrace($errno, $errstr, $errfile, $errline);
             email_backtrace($err, $errfile, $errline, $subject);
         // Print something to the user, too.
             if (file_exists('modules/_shared/tmpl/_errors/fatal.php')) {
@@ -152,7 +153,7 @@
         else {
             echo "<hr><p><b>", error_type($errno), "</b>",
                 " at $errfile, line $errline:<br />$errstr</p>\n",
-                "<!-- ".build_backtrace($errno, $errstr, $errfile, $errline, $vars)." -->\n",
+                "<!-- ".build_backtrace($errno, $errstr, $errfile, $errline)." -->\n",
                 "<hr>\n";
         }
     }
@@ -162,7 +163,7 @@
  *
  * @return string containing the backtrace
  **/
-    function build_backtrace($errno=null, $errstr=null, $errfile=null, $errline=null, $vars=null) {
+    function build_backtrace($errno=null, $errstr=null, $errfile=null, $errline=null) {
         global $_DEBUG;
     // Generate an error message that can be emailed to the administrator
         $bt = '    datetime:  '.date('Y-m-d H:i:s (T)')."\n";
@@ -178,11 +179,11 @@
               ."Backtrace: \n\n";
         $backtrace = debug_backtrace();
         array_shift($backtrace);
-        if ($backtrace[0]['function'] == 'error_handler')
+        if (isset($backtrace[0]['function']) && $backtrace[0]['function'] == 'error_handler')
             array_shift($backtrace);
         foreach ($backtrace as $layer) {
             foreach (array('file', 'line', 'class', 'function', 'type', 'args') as $key) {
-                $val = $layer[$key];
+                $val = $layer[$key] ?? '';
                 $bt .= str_repeat(' ', max(8-strlen($key), 0)). "$key:  ";
                 if (is_array($val) || is_object($val))
                     $bt .= print_r($val, true);
@@ -215,15 +216,12 @@
                   .'$_SERVER: '
                   .print_r($_SERVER, true);
         $constant_list = get_defined_constants(true);
-        ksort($constant_list['user']);
-        if (!empty($constant_list))
+        if (!empty($constant_list['user'])) {
+            ksort($constant_list['user']);
             $bt .= "\n==========================================================================\n\n"
                   .'$constant_list["user"]: '
                   .print_r($constant_list['user'], true);
-    ### stupid recursive objects break non-cutting-edge versions of php
-        #$bt .= "\n==========================================================================\n\n"
-        #      ."vars:\n"
-        #      .print_r($vars, true);
+        }
     // Cleanup
         $bt  = preg_replace('/Array\s+\(\s+\)\n+/', "Array ( )\n", $bt);
         $bt .= "\n\n";
@@ -240,8 +238,9 @@
  * @param string $subject   Email subject tagline.
  **/
     function email_backtrace($backtrace=null, $errfile=null, $errline=null, $subject="Backtrace") {
+        $email_target = defined('error_email') ? error_email : '';
     // No email, just return
-        if (!strstr(error_email, '@'))
+        if (!strstr($email_target, '@'))
             return;
     // Generate and email a backtrace
         if (empty($backtrace))
@@ -249,12 +248,12 @@
     // Need to figure out where this was called from?
         if (empty($errfile) || empty($errline)) {
             $bt = debug_backtrace();
-            $errfile = $bt[1]['file'];
-            $errline = $bt[1]['line'];
+            $errfile = $bt[1]['file'] ?? 'unknown';
+            $errline = $bt[1]['line'] ?? 0;
         }
     // Email the error to the website's error mailbox
-        mail(error_email,
+        mail($email_target,
              "Mythweb:  $subject:  $errfile, line $errline",
              $backtrace,
-             'From:  MythWeb PHP Error <'.error_email.">\r\n");
+             'From:  MythWeb PHP Error <'.$email_target.">\r\n");
     }

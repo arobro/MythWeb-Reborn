@@ -10,37 +10,41 @@
  **/
 
 // Path-based
-    if ($Path[2]) {
+    if (isset($Path[2]) && $Path[2]) {
         $_REQUEST['chanid'] = $Path[2];
-        if (!$_REQUEST['date'])
+        if (empty($_REQUEST['date']) && isset($Path[3]))
             $_REQUEST['date'] = $Path[3];
     }
 
 // Chanid?
-    $this_channel =& Channel::find($_REQUEST['chanid']);
+    $chanid = $_REQUEST['chanid'] ?? null;
+    $this_channel = Channel::find($chanid);
 
 // New list date?
-    if ($_REQUEST['date']) {
-        if (strlen($_REQUEST['date']) == 8)
+    if (!empty($_REQUEST['date'])) {
+        if (strlen((string)$_REQUEST['date']) == 8)
             $_REQUEST['date'] = unixtime(sprintf('%08d000000', $_REQUEST['date']));
         $_SESSION['list_time'] = $_REQUEST['date'];
     }
 
 // No channel found
-    if (!$_REQUEST['chanid'] || !$this_channel->chanid) {
+    if (empty($_REQUEST['chanid']) || empty($this_channel->chanid)) {
         redirect_browser(root_url.'tv/list');
     }
 
+    $list_time = $_SESSION['list_time'] ?? time();
+
 // Load the programs for today
-    $programs = load_all_program_data(mktime(0, 0, 0, date('n', $_SESSION['list_time']), date('j', $_SESSION['list_time']), date('Y', $_SESSION['list_time'])),
-                                      mktime(0, 0, 0, date('n', $_SESSION['list_time']), date('j', $_SESSION['list_time']) + 1, date('Y', $_SESSION['list_time'])),
+    $programs = load_all_program_data(mktime(0, 0, 0, date('n', $list_time), date('j', $list_time), date('Y', $list_time)),
+                                      mktime(0, 0, 0, date('n', $list_time), date('j', $list_time) + 1, date('Y', $list_time)),
                                       $this_channel->chanid);
 
 // No data?  Assume today.
     if (count($programs) < 1) {
         $_SESSION['list_time'] = time();
-        $programs = load_all_program_data(mktime(0, 0, 0, date('n', $_SESSION['list_time']), date('j', $_SESSION['list_time']), date('Y', $_SESSION['list_time'])),
-                                          mktime(0, 0, 0, date('n', $_SESSION['list_time']), date('j', $_SESSION['list_time']) + 1, date('Y', $_SESSION['list_time'])),
+        $list_time = $_SESSION['list_time'];
+        $programs = load_all_program_data(mktime(0, 0, 0, date('n', $list_time), date('j', $list_time), date('Y', $list_time)),
+                                          mktime(0, 0, 0, date('n', $list_time), date('j', $list_time) + 1, date('Y', $list_time)),
                                           $this_channel->chanid);
         if (count($programs) < 1)
             redirect_browser(root_url.'tv/list');
@@ -60,7 +64,7 @@
         $channels = Channel::getChannelList();
         echo "<select name=\"chanid\" $params>";
         foreach ($channels as $chanid) {
-            $channel =& Channel::find($chanid);
+            $channel = Channel::find($chanid);
         // Not visible?
             if (empty($channel->visible))
                 continue;
@@ -69,11 +73,11 @@
                  ' title="', html_entities($channel->name), '"';
         // Selected?
             if (($channel->chanid == $selected) ||
-                ($channel->chanid == $_GET['chanid']))
+                (isset($_GET['chanid']) && $channel->chanid == $_GET['chanid']))
                 echo ' SELECTED';
         // Print the rest of the content
             echo '>';
-            if ($_SESSION["prefer_channum"])
+            if (!empty($_SESSION["prefer_channum"]))
                 echo $channel->channum.'&nbsp;&nbsp;('.html_entities($channel->callsign).')';
             else
                 echo html_entities($channel->callsign).'&nbsp;&nbsp;('.$channel->channum.')';
@@ -97,9 +101,11 @@
             $time = mktime(0,0,0, date('m'), date('d') + $i, date('Y'));
             $date = date('Ymd', $time);
             echo "<option value=\"$date\"";
-            if ($date == date('Ymd', $_SESSION['list_time']))
+            if (isset($_SESSION['list_time']) && $date == date('Ymd', $_SESSION['list_time']))
                 echo ' SELECTED';
-            echo '>'.strftime($_SESSION['date_channel_jump'] , $time).'</option>';
+            $fmt = $_SESSION['date_channel_jump2'] ?? '%Y-%m-%d';
+            $formatted_date = date($fmt, $time);
+            echo '>'.$formatted_date.'</option>';
         }
         echo '</select>';
     }

@@ -11,12 +11,12 @@
  **/
 
 // Path-based
-    if ($Path[3])
+    if (isset($Path[3]))
         $_GET['recordid'] = $Path[3];
 
 // Load an existing schedule?
-    if ($_GET['recordid']) {
-        $schedule =& Schedule::find($_GET['recordid']);
+    if (!empty($_GET['recordid'])) {
+        $schedule = Schedule::find($_GET['recordid']);
     // Not a custom search schedule
         if (empty($schedule->search) || $schedule->search == searchtype_manual)
             redirect_browser(root_url.'tv/schedules');
@@ -37,7 +37,6 @@
             case searchtype_title:   $schedule->search_type = 'Title';   break;
             case searchtype_keyword: $schedule->search_type = 'Keyword'; break;
             case searchtype_people:  $schedule->search_type = 'People';  break;
-                break;
         // Everything else generates an error message
             default:
                 trigger_error('Unknown search type specified:  '.$_POST['searchtype']);
@@ -70,63 +69,64 @@
     // Adding a new schedule
         else {
         // Set things as the user requested
-            $schedule->profile       = $_POST['profile'];
-            $schedule->recgroup      = $_POST['recgroup'];
-            $schedule->storagegroup  = $_POST['storagegroup'];
-            $schedule->playgroup     = $_POST['playgroup'];
-            $schedule->autoexpire    = $_POST['autoexpire']   ? 1 : 0;
-            $schedule->autocommflag  = $_POST['autocommflag'] ? 1 : 0;
-            $schedule->autouserjob1  = $_POST['autouserjob1'] ? 1 : 0;
-            $schedule->autouserjob2  = $_POST['autouserjob2'] ? 1 : 0;
-            $schedule->autouserjob3  = $_POST['autouserjob3'] ? 1 : 0;
-            $schedule->autouserjob4  = $_POST['autouserjob4'] ? 1 : 0;
-            $schedule->autometadata  = $_POST['autometadata'] ? 1 : 0;
-            $schedule->inactive      = $_POST['inactive']     ? 1 : 0;
-            $schedule->maxnewest     = $_POST['maxnewest']    ? 1 : 0;
-            $schedule->dupin         = _or($_POST['dupin'] + $_POST['dupin2'], dupsin_all);
-            $schedule->dupmethod     = _or($_POST['dupmethod'], 6);
-            $schedule->recpriority   = intval($_POST['recpriority']);
-            $schedule->maxepisodes   = intval($_POST['maxepisodes']);
-            $schedule->startoffset   = intval($_POST['startoffset']);
-            $schedule->endoffset     = intval($_POST['endoffset']);
-            $schedule->prefinput     = $_POST['prefinput'];
-            $schedule->inetref       = $_POST['inetref'];
-            $schedule->season        = intval($_POST['season']);
-            $schedule->episode       = intval($_POST['episode']);
+            $schedule->profile       = $_POST['profile'] ?? '';
+            $schedule->recgroup      = $_POST['recgroup'] ?? '';
+            $schedule->storagegroup  = $_POST['storagegroup'] ?? '';
+            $schedule->playgroup     = $_POST['playgroup'] ?? '';
+            $schedule->autoexpire    = !empty($_POST['autoexpire'])   ? 1 : 0;
+            $schedule->autocommflag  = !empty($_POST['autocommflag']) ? 1 : 0;
+            $schedule->autouserjob1  = !empty($_POST['autouserjob1']) ? 1 : 0;
+            $schedule->autouserjob2  = !empty($_POST['autouserjob2']) ? 1 : 0;
+            $schedule->autouserjob3  = !empty($_POST['autouserjob3']) ? 1 : 0;
+            $schedule->autouserjob4  = !empty($_POST['autouserjob4']) ? 1 : 0;
+            $schedule->autometadata  = !empty($_POST['autometadata']) ? 1 : 0;
+            $schedule->inactive      = !empty($_POST['inactive'])     ? 1 : 0;
+            $schedule->maxnewest     = !empty($_POST['maxnewest'])    ? 1 : 0;
+            $dupin_val               = (isset($_POST['dupin']) ? $_POST['dupin'] : 0) + (isset($_POST['dupin2']) ? $_POST['dupin2'] : 0);
+            $schedule->dupin         = _or($dupin_val, dupsin_all);
+            $schedule->dupmethod     = _or($_POST['dupmethod'] ?? null, 6);
+            $schedule->recpriority   = intval($_POST['recpriority'] ?? 0);
+            $schedule->maxepisodes   = intval($_POST['maxepisodes'] ?? 0);
+            $schedule->startoffset   = intval($_POST['startoffset'] ?? 0);
+            $schedule->endoffset     = intval($_POST['endoffset'] ?? 0);
+            $schedule->prefinput     = $_POST['prefinput'] ?? '';
+            $schedule->inetref       = $_POST['inetref'] ?? '';
+            $schedule->season        = intval($_POST['season'] ?? 0);
+            $schedule->episode       = intval($_POST['episode'] ?? 0);
             $schedule->filter        = generateFilter();
         // Some settings specific to manual recordings (since we have no program to match against)
-            $schedule->chanid        = $_POST['channel'];
+            $schedule->chanid        = $_POST['channel'] ?? '';
             $schedule->station       = Channel::find($schedule->chanid)->callsign;
             $schedule->starttime     = time();
             $schedule->endtime       = time() + 1;
             $schedule->category      = 'Custom recording';
-            $schedule->search        = $_POST['searchtype'];
-            $schedule->findday       = $_POST['findday'];
-            $schedule->autotranscode = $_POST['autotranscode'] ? 1 : 0;
-            $schedule->transcoder    = $_POST['transcoder'];
+            $schedule->search        = $_POST['searchtype'] ?? '';
+            $schedule->findday       = $_POST['findday'] ?? '';
+            $schedule->autotranscode = !empty($_POST['autotranscode']) ? 1 : 0;
+            $schedule->transcoder    = $_POST['transcoder'] ?? '';
         // Parse the findtime
-            $schedule->findtime      = trim($_POST['findtime']);
+            $schedule->findtime      = trim($_POST['findtime'] ?? '');
             if ($schedule->findtime) {
                 if (!preg_match('/^\d{1,2}:\d{2}:\d{2}$/', $schedule->findtime))
                     add_error(t('Find Time must be of the format:  HH:MM:SS'));
             }
             else
-                $schedule->findtime = date('H:m:s', $schedule->starttime);
+                $schedule->findtime = date('H:i:s', $schedule->starttime);
         // Build the special description
             if ($schedule->search == searchtype_power) {
             // Remove any trailing semi colons, and any secondary hackish queries
                 $schedule->description = preg_replace('/\s*;\s*(EXPLAIN|DESCRIBE|SHOW|SELECT|DELETE|UPDATE|INSERT|REPLACE).*$/i', '',
                                          preg_replace('/;$/', '',
-                                                      $_POST['search_sql']
+                                                      $_POST['search_sql'] ?? ''
                                                      ));
             // The subtitle is actually used to store additional SQL tables
-                if (preg_match('/\w/', $_POST['additional_tables']))
+                if (preg_match('/\w/', $_POST['additional_tables'] ?? ''))
                     $schedule->subtitle = preg_replace('/^\W*/', ', ',
                                           preg_replace('/\W+$/', '',
-                                                       $_POST['additional_tables']
+                                                       $_POST['additional_tables'] ?? ''
                                                       ));
             // Quick fix for LEFT JOINs to be syntaxly correct
-                $schedule->subtitle = str_replace(', LEFT JOIN', ' LEFT JOIN', $schedule->subtitle);
+                $schedule->subtitle = str_replace(', LEFT JOIN', ' LEFT JOIN', $schedule->subtitle ?? '');
             // Run a test query
                 $db->disable_fatal_errors();
                 $sh = $db->query('SELECT NULL FROM program, channel'.str_replace('?', '\\?', $schedule->subtitle)
@@ -139,11 +139,11 @@
                 }
             }
             else {
-                $schedule->description = _or($_POST['search_phrase'], $_POST['title']);
+                $schedule->description = _or($_POST['search_phrase'] ?? null, $_POST['title'] ?? null);
                 $schedule->subtitle    = '';
             }
         // Figure out the title
-            $schedule->title = _or($_POST['title'], $schedule->description).' ('.t('$1 Search', $schedule->search_type).')';
+            $schedule->title = _or($_POST['title'] ?? null, $schedule->description).' ('.t('$1 Search', $schedule->search_type).')';
         // Only save if there are no errors
             if (!errors()) {
             // Save the schedule
@@ -157,7 +157,7 @@
 // Set some defaults
     else {
     // Make sure we have a default rectype
-        if (!$schedule->type)
+        if (empty($schedule->type))
             $schedule->type = rectype_always;
     // Get the searchtype string
         switch ($schedule->search) {
@@ -189,6 +189,7 @@
  * Prints a <select> of the available program categories
  **/
     function category_select() {
+        global $chanid;
         echo '<select name="channel"><option value=""';
         if (empty($chanid))
             echo ' SELECTED';
@@ -200,6 +201,7 @@
  * Prints a <select> of the available program category_types
  **/
     function category_type_select() {
+        global $chanid;
         echo '<select name="channel"><option value=""';
         if (empty($chanid))
             echo ' SELECTED';
@@ -216,8 +218,8 @@
         if (empty($chanid))
             echo ' SELECTED';
         echo '>('.t('Any Channel').')</option>';
-        foreach ($Channel_list as $chanid) {
-            $channel =& Channel::find($chanid);
+        foreach ($Channel_list as $this_chanid) {
+            $channel = Channel::find($this_chanid);
 
         // Print the option
             echo '<option value="', $channel->chanid, '"',
@@ -227,7 +229,7 @@
                 echo ' SELECTED';
         // Print the rest of the content
             echo '>';
-            if ($_SESSION["prefer_channum"])
+            if (!empty($_SESSION["prefer_channum"]))
                 echo $channel->channum.'&nbsp;&nbsp;('.html_entities($channel->callsign).')';
             else
                 echo html_entities($channel->callsign).'&nbsp;&nbsp;('.$channel->channum.')';
@@ -239,7 +241,7 @@
 /**
  * Prints a <select> of the various weekdays
  **/
-    function day_select($day, $name='findday') {
+    function day_select($selected_day, $name='findday') {
         $days = array(t('Sunday'),    t('Monday'),   t('Tuesday'),
                              t('Wednesday'), t('Thursday'), t('Friday'),
                              t('Saturday'));
@@ -248,7 +250,7 @@
         foreach ($days as $key => $day) {
             $key++;
             echo "<option value=\"$key\"";
-            if ($key == $day)
+            if ($key == $selected_day)
                 echo ' SELECTED';
             echo '>'.html_entities($day).'</option>';
         }

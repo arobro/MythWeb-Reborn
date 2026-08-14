@@ -10,7 +10,7 @@
  **/
 
 // Scheduling a manual recording gets its own page
-    if ($Path[2] == 'manual' || $Path[2] == 'custom') {
+    if (isset($Path[2]) && ($Path[2] == 'manual' || $Path[2] == 'custom')) {
         require_once 'modules/tv/schedules_'.$Path[2].'.php';
         exit;
     }
@@ -22,7 +22,7 @@
 // Parse the recording list
     $the_schedules = array();
     foreach (Schedule::findAll() as $key) {
-        $schedule = &Schedule::find($key);
+        $schedule = Schedule::find($key);
     // Ignore overrides
     #    if ($schedule->type == rectype_override)
     #        continue;
@@ -41,14 +41,14 @@
             $schedule->channel = Channel::find(null);
         }
     // Add this show
-        $the_schedules[] = &$schedule;
+        $the_schedules[] = $schedule;
     }
 
-// Remove the reference. This prevents duplicate entries showing up in the list
+// Remove the variable reference
     unset($schedule);
 
 // Force the default sort preferences
-    if (!is_array($_SESSION['schedules_sortby']) || !count($_SESSION['schedules_sortby']))
+    if (empty($_SESSION['schedules_sortby']) || !is_array($_SESSION['schedules_sortby']))
         $_SESSION['schedules_sortby'] = array(array('field' => 'title', 'reverse' => false));
 
 // Sort the recordings

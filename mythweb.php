@@ -19,23 +19,31 @@
 // Init
     require_once 'includes/init.php';
 
+// Ensure $Path exists as an array for PHP 8+ safe indexing
+    if (!isset($Path) || !is_array($Path)) {
+        $Path = array();
+    }
+
 // Handle Feed requests
-    if (   $Path[0] == 'rss'
-        || $Path[0] == 'ical') {
+    if (   isset($Path[0])
+        && ($Path[0] == 'rss' || $Path[0] == 'ical')) {
         unset($Path[0]);
         $Path = array_values($Path);
     }
 
 // Standard module?  Pass along the
-    if (Modules::getModule($Path[0])) {
+    if (isset($Path[0]) && Modules::getModule($Path[0])) {
     // Add the current module directory to our search path, so modules can
     // define includes, etc.
-        ini_set('include_path', ini_get('include_path').PATH_SEPARATOR.modules_path.'/'.$Path[0]);
+        $mod_path = defined('modules_path') ? modules_path : 'modules';
+        ini_set('include_path', ini_get('include_path').PATH_SEPARATOR.$mod_path.'/'.$Path[0]);
     // Load the module handler
         require_once 'handler.php';
     }
-    elseif ($Path[0] == 'dcss')
-        include_once 'skins/default/'.$Path[1];
+    elseif (isset($Path[0]) && $Path[0] == 'dcss') {
+        $skin_file = isset($Path[1]) ? $Path[1] : '';
+        include_once 'skins/default/'.$skin_file;
+    }
     elseif (!empty($Path[0]) && preg_match('/\w/', $Path[0]))
         tailored_error('unknown_module');
     else

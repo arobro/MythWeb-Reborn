@@ -11,16 +11,25 @@
  *
  **/
 
-    if ($_SERVER['MYTHWEB_LOCKDOWN_DISABLE'] != true) {
-        if (   stristr('bot',     $_SERVER['HTTP_USER_AGENT']) !== false
-            || stristr('spider',  $_SERVER['HTTP_USER_AGENT']) !== false
-            || stristr('crawler', $_SERVER['HTTP_USER_AGENT']) !== false
-            || stristr('search',  $_SERVER['HTTP_USER_AGENT']) !== false
-            || stristr('yahoo',   $_SERVER['HTTP_USER_AGENT']) !== false
-            || isset($_GET['TRIGGER_MYTHWEB_LOCKDOWN'])
-           )
+    $lockdown_disabled = isset($_SERVER['MYTHWEB_LOCKDOWN_DISABLE']) && (bool)$_SERVER['MYTHWEB_LOCKDOWN_DISABLE'];
+    $user_agent        = strtolower($_SERVER['HTTP_USER_AGENT'] ?? '');
+
+    if (!$lockdown_disabled) {
+        $bot_keywords = ['bot', 'spider', 'crawler', 'search', 'yahoo'];
+        $is_bot       = false;
+
+        foreach ($bot_keywords as $keyword) {
+            if (str_contains($user_agent, $keyword)) {
+                $is_bot = true;
+                break;
+            }
+        }
+
+        if ($is_bot || isset($_GET['TRIGGER_MYTHWEB_LOCKDOWN'])) {
             touch('lockdown');
+        }
     }
 
-    if (   $_SERVER['MYTHWEB_LOCKDOWN_DISABLE'] != true && file_exists('lockdown'))
+    if (!$lockdown_disabled && file_exists('lockdown')) {
         tailored_error('lockdown');
+    }

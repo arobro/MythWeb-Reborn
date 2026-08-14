@@ -10,10 +10,11 @@
  * @subpackage  Settings
  **/
 
-    $Settings['mythtv'] = array('name'    => t('MythTV'),
-                                'choices' => array('settings' => t('Settings Table'),
-                                                   'keys'     => t('Key Bindings'),
-                                                  ),
-                                'default' => 'settings',
-                               );
-
+    $Settings['mythtv'] = [
+        'name'    => t('MythTV'),
+        'choices' => [
+            'settings' => t('Settings Table'),
+            'keys'     => t('Key Bindings'),
+        ],
+        'default' => 'settings',
+    ];

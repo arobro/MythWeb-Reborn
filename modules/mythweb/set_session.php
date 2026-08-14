@@ -10,7 +10,7 @@
  **/
 
 // Save?
-    if ($_POST['save']) {
+    if (!empty($_POST['save'])) {
     // Save the template
         if (isset($_POST['tmpl']))
             $_SESSION['tmpl'] = $_POST['tmpl'];
@@ -20,32 +20,34 @@
             $_SESSION['skin'] = $_POST['skin'];
 
     // Change language?  Make sure we load the new translation file, too.
-        if ($_POST['language'] && $_POST['language'] != $_SESSION['language']){
+        if (!empty($_POST['language']) && $_POST['language'] != ($_SESSION['language'] ?? null)){
             $_SESSION['language'] = $_POST['language'];
 	    // Unset the date/time formats in session so translation can fill in the 
 	    // language specific defaults
-            unset($_SESSION['date_statusbar']);
-            unset($_SESSION['date_scheduled']);
-            unset($_SESSION['date_scheduled_popup']);
-            unset($_SESSION['date_recorded']);
-            unset($_SESSION['date_search']);
-            unset($_SESSION['date_listing_key']);
-            unset($_SESSION['date_listing_jump']);
-            unset($_SESSION['date_channel_jump']);
-            unset($_SESSION['date_job_status']);
-            unset($_SESSION['time_format']);
+            unset($_SESSION['date_statusbar2']);
+            unset($_SESSION['date_scheduled2']);
+            unset($_SESSION['date_scheduled_popup2']);
+            unset($_SESSION['date_recorded2']);
+            unset($_SESSION['date_search2']);
+            unset($_SESSION['date_listing_key2']);
+            unset($_SESSION['date_listing_jump2']);
+            unset($_SESSION['date_channel_jump2']);
+            unset($_SESSION['date_job_status2']);
+            unset($_SESSION['time_format2']);
             Translate::find()->load_translation();
         }
 
-        redirect_browser(module.'/'.$Path[1].'/'.$Path[2]);
+        $path1 = $Path[1] ?? '';
+        $path2 = $Path[2] ?? '';
+        redirect_browser(module.'/'.$path1.'/'.$path2);
     }
 
 /**
  * Displays a <select> of the available templates
  **/
     function template_select($name = 'tmpl', $selected = null) {
-        echo '<select name="'.$name.'">';
-        foreach (array('default', 'lite') as $tmpl) {
+        echo '<select name="'.html_entities($name).'">';
+        foreach (array('default') as $tmpl) {
         // Print the option
             echo '<option value="'.html_entities($tmpl).'"';
             if ($selected == $tmpl)
@@ -59,7 +61,7 @@
  * Displays a <select> of the available skins
  **/
     function skin_select($name = 'skin', $selected = null) {
-        echo '<select id="'.$name.'" name="'.$name.'">';
+        echo '<select id="'.html_entities($name).'" name="'.html_entities($name).'">';
         foreach (get_sorted_files("skins/") as $skin) {
         // Skip the svn directory
             if (in_array($skin, array('.svn')))
@@ -81,12 +83,14 @@
  **/
     function language_select() {
         echo '<select name="language">';
-        foreach (Translate::$Languages as $lang => $details) {
-        // Print the option
-            echo '<option value="'.html_entities($lang).'"';
-            if ($_SESSION['language'] == $lang)
-                echo ' SELECTED';
-            echo '>'.$details[0].'</option>';
+        if (isset(Translate::$Languages) && is_array(Translate::$Languages)) {
+            foreach (Translate::$Languages as $lang => $details) {
+            // Print the option
+                echo '<option value="'.html_entities($lang).'"';
+                if (($_SESSION['language'] ?? null) == $lang)
+                    echo ' SELECTED';
+                echo '>'.$details[0].'</option>';
+            }
         }
         echo '</select>';
     }

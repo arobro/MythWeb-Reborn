@@ -9,12 +9,12 @@
  **/
 
 // Path-based
-    if ($Path[3])
+    if (isset($Path[3]))
         $_GET['recordid'] = $Path[3];
 
 // Load an existing schedule?
-    if ($_GET['recordid']) {
-        $schedule =& Schedule::find($_GET['recordid']);
+    if (!empty($_GET['recordid'])) {
+        $schedule = Schedule::find($_GET['recordid']);
     // Not a manual schedule
         if (empty($schedule->search) || $schedule->search != searchtype_manual)
             redirect_browser(root_url.'tv/schedules');
@@ -29,7 +29,7 @@
 // The user tried to update the recording settings - update the database and the variable in memory
     if (isset($_POST['save'])) {
     // Which type of recording is this?  Make sure an illegal one isn't specified
-        switch ($_POST['record']) {
+        switch ($_POST['record'] ?? null) {
         // Only certain rectypes are allowed
             case rectype_once:        $type = rectype_once;        break;
             case rectype_daily:       $type = rectype_daily;       break;
@@ -56,52 +56,53 @@
     // Adding a new schedule
         else {
         // Set things as the user requested
-            $schedule->profile       = $_POST['profile'];
-            $schedule->recgroup      = $_POST['recgroup'];
-            $schedule->storagegroup  = $_POST['storagegroup'];
-            $schedule->playgroup     = $_POST['playgroup'];
-            $schedule->autoexpire    = $_POST['autoexpire']   ? 1 : 0;
-            $schedule->autocommflag  = $_POST['autocommflag'] ? 1 : 0;
-            $schedule->autouserjob1  = $_POST['autouserjob1'] ? 1 : 0;
-            $schedule->autouserjob2  = $_POST['autouserjob2'] ? 1 : 0;
-            $schedule->autouserjob3  = $_POST['autouserjob3'] ? 1 : 0;
-            $schedule->autouserjob4  = $_POST['autouserjob4'] ? 1 : 0;
-            $schedule->autometadata  = $_POST['autometadata'] ? 1 : 0;
-            $schedule->maxnewest     = $_POST['maxnewest']    ? 1 : 0;
-            $schedule->dupin         = _or($_POST['dupin'] + $_POST['dupin2'], dupsin_all);
-            $schedule->dupmethod     = _or($_POST['dupmethod'], 6);
-            $schedule->recpriority   = intval($_POST['recpriority']);
-            $schedule->maxepisodes   = intval($_POST['maxepisodes']);
-            $schedule->startoffset   = intval($_POST['startoffset']);
-            $schedule->endoffset     = intval($_POST['endoffset']);
-            $schedule->prefinput     = $_POST['prefinput'];
-            $schedule->inetref       = $_POST['inetref'];
-            $schedule->season        = intval($_POST['season']);
-            $schedule->episode       = intval($_POST['season']);
+            $schedule->profile       = $_POST['profile'] ?? '';
+            $schedule->recgroup      = $_POST['recgroup'] ?? '';
+            $schedule->storagegroup  = $_POST['storagegroup'] ?? '';
+            $schedule->playgroup     = $_POST['playgroup'] ?? '';
+            $schedule->autoexpire    = !empty($_POST['autoexpire'])   ? 1 : 0;
+            $schedule->autocommflag  = !empty($_POST['autocommflag']) ? 1 : 0;
+            $schedule->autouserjob1  = !empty($_POST['autouserjob1']) ? 1 : 0;
+            $schedule->autouserjob2  = !empty($_POST['autouserjob2']) ? 1 : 0;
+            $schedule->autouserjob3  = !empty($_POST['autouserjob3']) ? 1 : 0;
+            $schedule->autouserjob4  = !empty($_POST['autouserjob4']) ? 1 : 0;
+            $schedule->autometadata  = !empty($_POST['autometadata']) ? 1 : 0;
+            $schedule->maxnewest     = !empty($_POST['maxnewest'])    ? 1 : 0;
+            $dupin_val               = (isset($_POST['dupin']) ? $_POST['dupin'] : 0) + (isset($_POST['dupin2']) ? $_POST['dupin2'] : 0);
+            $schedule->dupin         = _or($dupin_val, dupsin_all);
+            $schedule->dupmethod     = _or($_POST['dupmethod'] ?? null, 6);
+            $schedule->recpriority   = intval($_POST['recpriority'] ?? 0);
+            $schedule->maxepisodes   = intval($_POST['maxepisodes'] ?? 0);
+            $schedule->startoffset   = intval($_POST['startoffset'] ?? 0);
+            $schedule->endoffset     = intval($_POST['endoffset'] ?? 0);
+            $schedule->prefinput     = $_POST['prefinput'] ?? '';
+            $schedule->inetref       = $_POST['inetref'] ?? '';
+            $schedule->season        = intval($_POST['season'] ?? 0);
+            $schedule->episode       = intval($_POST['season'] ?? 0);
             $schedule->filter        = generateFilter();
         // Some settings specific to manual recordings (since we have no program to match against)
-            $schedule->chanid        = $_POST['channel'];
+            $schedule->chanid        = $_POST['channel'] ?? '';
             $schedule->station       = Channel::find($schedule->chanid)->callsign;
-            $schedule->starttime     = strtotime($_POST['startdate'].' '.$_POST['starttime']);
-            $schedule->endtime       = $schedule->starttime + ($_POST['length'] * 60);
+            $schedule->starttime     = strtotime(($_POST['startdate'] ?? '').' '.($_POST['starttime'] ?? ''));
+            $schedule->endtime       = $schedule->starttime + (intval($_POST['length'] ?? 0) * 60);
             $schedule->subtitle      = '';
             $schedule->description   = '';
             $schedule->category      = '';
             $schedule->search        = searchtype_manual;
             $schedule->findday       = date('w',     $schedule->starttime);
-            $schedule->findtime      = date('H:m:s', $schedule->starttime);
-            $schedule->autotranscode = $_POST['autotranscode'] ? 1 : 0;
-            $schedule->transcoder    = $_POST['transcoder'];
+            $schedule->findtime      = date('H:i:s', $schedule->starttime);
+            $schedule->autotranscode = !empty($_POST['autotranscode']) ? 1 : 0;
+            $schedule->transcoder    = $_POST['transcoder'] ?? '';
         // Figure out the title
-            $channel =& Channel::find($_POST['channel']);
-            if (strcasecmp($_POST['title'], t('Use callsign')) == 0) {
-                if ($_SESSION["prefer_channum"])
+            $channel = Channel::find($_POST['channel'] ?? '');
+            if (strcasecmp($_POST['title'] ?? '', t('Use callsign')) == 0) {
+                if (!empty($_SESSION["prefer_channum"]))
                     $schedule->title = $channel->channum.' ('.$channel->callsign.')';
                 else
                     $schedule->title = $channel->callsign.' ('.$channel->channum.')';
             }
             else
-                $schedule->title = $_POST['title'];
+                $schedule->title = $_POST['title'] ?? '';
         // Save the schedule
             $schedule->save($type);
         // Redirect to the new schedule
@@ -144,7 +145,7 @@
         echo '<select name="channel">';
         $seen = array();
         foreach ($Channel_list as $this_chanid) {
-            $channel =& Channel::find($this_chanid);
+            $channel = Channel::find($this_chanid);
 
         // Print the option
             echo '<option value="', $channel->chanid, '"',
@@ -154,7 +155,7 @@
                 echo ' SELECTED';
         // Print the rest of the content
             echo '>';
-            if ($_SESSION["prefer_channum"])
+            if (!empty($_SESSION["prefer_channum"]))
                 echo $channel->channum.'&nbsp;&nbsp;('.html_entities($channel->callsign).')';
             else
                 echo html_entities($channel->callsign).'&nbsp;&nbsp;('.$channel->channum.')';

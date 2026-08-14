@@ -16,7 +16,7 @@
     function generateFilter() {
         $total = 0;
         foreach (Schedule::availableRecordFilters() as $id => $filter) {
-            $enabled = intval($_POST["recordfilter_$id"]);
+            $enabled = isset($_POST["recordfilter_$id"]) ? intval($_POST["recordfilter_$id"]) : 0;
             $total |= $enabled << $id;
         }
         return $total;
@@ -44,7 +44,8 @@
         }
     // Only one input?
         if (count($inputs) == 1) {
-            list($id, $name) = reset($inputs);
+            $id = key($inputs);
+            $name = current($inputs);
             echo '<input type="hidden" name="', $ename, '" value="0">',
                  t('Any');
         }

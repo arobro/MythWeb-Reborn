@@ -125,7 +125,8 @@
     define('video_img_width',   _or(setting('web_video_thumbnail_width', hostname),   94));
 
 // Load a custom page
-    switch ($Path[1]) {
+    $path_segment = $Path[1] ?? '';
+    switch ($path_segment) {
         case 'edit':
             require_once 'modules/video/edit.php';
             exit;
@@ -190,8 +191,9 @@
         for ($i = 0; $i < $padding; $i++) {
             echo '&nbsp;&nbsp;&nbsp;&nbsp;';
         }
+        $active_path = $_SESSION['video']['path'] ?? '';
         if (strlen($path['path']) > 0) {
-            echo '<a class="'.($_SESSION['video']['path'] == $path['path']?'active':'').'" href="'.root_url.'video?path='.urlencode($path['path']).'">'.$path['display']."</a><br>\n";
+            echo '<a class="'.($active_path == $path['path']?'active':'').'" href="'.root_url.'video?path='.urlencode($path['path']).'">'.$path['display']."</a><br>\n";
         }
         if (count($path['subs'])) {
             foreach ($path['subs'] AS $p) {
@@ -223,6 +225,7 @@
 // Filter_Category of -1 means All, 0 mean uncategorized
     $Total_Programs = 0;
     $All_Videos     = array();
+    $where          = '';
     if (isset($_REQUEST['category']) ) {
         $Filter_Category = $_REQUEST['category'];
         if ($Filter_Category != -1) {
@@ -276,7 +279,8 @@
     if (isset($_REQUEST['VideoAdminPassword']))
         $_SESSION['video']['VideoAdminPassword'] = $_REQUEST['VideoAdminPassword'];
 
-    if ($_SESSION['video']['VideoAdminPassword'] != setting('VideoAdminPassword', hostname))
+    $admin_pass = $_SESSION['video']['VideoAdminPassword'] ?? null;
+    if ($admin_pass != setting('VideoAdminPassword', hostname))
         $where .= ' AND videometadata.showlevel <= '.$db->escape(setting('VideoDefaultParentalLevel', hostname));
 
     if ($where)
@@ -296,7 +300,7 @@
     $sh->finish();
 
 // Set sorting
-    if (!is_array($_SESSION['video_sortby']))
+    if (!isset($_SESSION['video_sortby']) || !is_array($_SESSION['video_sortby']))
         $_SESSION['video_sortby'] = array(array('field'   => 'title',
                                                 'reverse' => false));
 

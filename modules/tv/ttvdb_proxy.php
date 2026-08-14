@@ -12,4 +12,5 @@
 
     header('Content-Type: image/jpg');
 
-    echo @file_get_contents("http://www.thetvdb.com" . $_REQUEST['url']);
+    $url = $_REQUEST['url'] ?? '';
+    echo @file_get_contents("http://www.thetvdb.com" . $url);

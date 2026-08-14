@@ -13,18 +13,18 @@
     $page_title = 'MythWeb - '.t('Videos');
 
 // Custom headers
-    $headers[] = '<link rel="stylesheet" type="text/css" href="'.root_url.'dcss/video.css">';
-    $headers[] = '<link rel="stylesheet" type="text/css" href="'.root_url.'skins/'.skin.'/video.css">';
+    $headers[] = '<link rel="stylesheet" type="text/css" href="'.(defined('root_url') ? root_url : '').'dcss/video.css">';
+    $headers[] = '<link rel="stylesheet" type="text/css" href="'.(defined('root_url') ? root_url : '').'skins/'.(defined('skin') ? skin : '').'/video.css">';
 
 // Print the page header
-    require 'modules/_shared/tmpl/'.tmpl.'/header.php';
+    require 'modules/_shared/tmpl/'.(defined('tmpl') ? tmpl : '').'/header.php';
 ?>
 
 <script type="text/javascript">
 
     function newWindow(id) {
         $('window_title').innerHTML   = '<?php echo addslashes(t('Editing ')); ?> ' + $(id+'-title').childNodes[1].innerHTML;
-        $('window_content').innerHTML = '<iframe src="<?php echo root_url; ?>video/edit?intid='+id+'">';
+        $('window_content').innerHTML = '<iframe src="<?php echo defined('root_url') ? root_url : ''; ?>video/edit?intid='+id+'">';
         $('window').show();
         Tips.hideAll();
     }
@@ -37,7 +37,7 @@
         ajax_add_request();
     // Clean up the title string
         title = title.replace('&', '%26');
-        new Ajax.Request('<?php echo root_url ?>video/imdb',
+        new Ajax.Request('<?php echo defined('root_url') ? root_url : '' ?>video/imdb',
                          {
                             method:     'get',
                             parameters: {
@@ -92,7 +92,7 @@
     }
 
     function makeImdbWebUrl(num) {
-        var imdb = "<?php echo setting('web_video_imdb_type', hostname); ?>";
+        var imdb = "<?php echo setting('web_video_imdb_type', defined('hostname') ? hostname : null); ?>";
         if (imdb == 'ALLOCINE')
             return "http://www.allocine.fr/film/fichefilm_gen_cfilm="+num+".html";
         return "http://www.imdb.com/Title?"+num;
@@ -101,7 +101,7 @@
     function imdb_select(id, number) {
         ajax_add_request();
         $('window').hide();
-        new Ajax.Request('<?php echo root_url; ?>video/imdb',
+        new Ajax.Request('<?php echo defined('root_url') ? root_url : ''; ?>video/imdb',
             {
                 method:     'get',
                 parameters: {
@@ -129,7 +129,7 @@
         if (!id.match(/^(\d*)$/))
             return;
         ajax_add_request();
-        new Ajax.Request('<?php echo root_url; ?>video/imdb',
+        new Ajax.Request('<?php echo defined('root_url') ? root_url : ''; ?>video/imdb',
             {
                 method:     'get',
                 parameters: {
@@ -200,7 +200,7 @@
         hovering_video_id = id;
         if (!Tips.hasTip(id) && loading_popups[id] != true ) {
             loading_popups[id] = true;
-            new Ajax.Request('<?php echo root_url; ?>video/imdb',
+            new Ajax.Request('<?php echo defined('root_url') ? root_url : ''; ?>video/imdb',
                 {
                     method:     'get',
                     parameters: {
@@ -229,7 +229,7 @@
 // We currently do require a reload after a scan event
     function scan() {
         ajax_add_request();
-        new Ajax.Request('<?php echo root_url; ?>video/scan',
+        new Ajax.Request('<?php echo defined('root_url') ? root_url : ''; ?>video/scan',
             {
                 method:    'get',
                 onSuccess: reload
@@ -253,43 +253,47 @@
 <tr class="menu">
 <td>
 <!-- Bad! Don't do this! <span style="float: right"><input type="button" value="<?php echo t('Scan Collection'); ?>" class="submit" onclick="scan()"></span> -->
- <form action="<?php echo root_url; ?>video" method="GET">
+ <form action="<?php echo defined('root_url') ? root_url : ''; ?>video" method="GET">
   <?php echo t('Display'); ?>:
   <select name="category" id="category" onchange="filter();">
-   <option value="-1" <?php if($Filter_Category == -1) echo 'SELECTED'; ?>><?php echo t('All Categories'); ?></option>
+   <option value="-1" <?php if(isset($Filter_Category) && $Filter_Category == -1) echo 'SELECTED'; ?>><?php echo t('All Categories'); ?></option>
    <?php
-    foreach (array_keys($Category_String) as $i) {
-        echo "<option value=\"$i\"";
-        if( $i == $Filter_Category )
-            echo ' SELECTED';
-        echo '>'.html_entities($Category_String[$i])."</option>\n";
+    if (isset($Category_String) && is_array($Category_String)) {
+        foreach (array_keys($Category_String) as $i) {
+            echo "<option value=\"$i\"";
+            if( isset($Filter_Category) && $i == $Filter_Category )
+                echo ' SELECTED';
+            echo '>'.html_entities($Category_String[$i])."</option>\n";
+        }
     }
    ?>
   </select>&nbsp;&nbsp;
   <select name="genre" id="genre" onchange="filter();">
-   <option value="-1" <?php if ($Filter_Genre == -1) echo 'SELECTED'; ?>><?php echo t('All Genres'); ?></option>
+   <option value="-1" <?php if (isset($Filter_Genre) && $Filter_Genre == -1) echo 'SELECTED'; ?>><?php echo t('All Genres'); ?></option>
    <?php
-    foreach (array_keys($Genre_String) as $i) {
-        echo "<option value=\"$i\"";
-        if( $i == $Filter_Genre )
-            echo ' SELECTED';
-        echo '>'.html_entities($Genre_String[$i])."</option>\n";
+    if (isset($Genre_String) && is_array($Genre_String)) {
+        foreach (array_keys($Genre_String) as $i) {
+            echo "<option value=\"$i\"";
+            if( isset($Filter_Genre) && $i == $Filter_Genre )
+                echo ' SELECTED';
+            echo '>'.html_entities($Genre_String[$i])."</option>\n";
+        }
     }
    ?>
   </select>&nbsp;&nbsp;
   <select name="browse" id="browse" onchange="filter();">
-   <option value="-1" <?php if ($Filter_Browse == -1) echo 'SELECTED'; ?>><?php echo t('Browse all'); ?></option>
-   <option value="1"  <?php if ($Filter_Browse ==  1) echo 'SELECTED'; ?>><?php echo t('Browse = yes'); ?></option>
-   <option value="0"  <?php if ($Filter_Browse ==  0) echo 'SELECTED'; ?>><?php echo t('Browse = no'); ?></option>
+   <option value="-1" <?php if (isset($Filter_Browse) && $Filter_Browse == -1) echo 'SELECTED'; ?>><?php echo t('Browse all'); ?></option>
+   <option value="1"  <?php if (isset($Filter_Browse) && $Filter_Browse ==  1) echo 'SELECTED'; ?>><?php echo t('Browse = yes'); ?></option>
+   <option value="0"  <?php if (isset($Filter_Browse) && $Filter_Browse ==  0) echo 'SELECTED'; ?>><?php echo t('Browse = no'); ?></option>
   </select>&nbsp;&nbsp;
-  <?php echo t('Title search'); ?>: <input id="filter_box" name="search" value="<?php echo $Filter_Search; ?>" onchange="filter();" onkeyup="filter();">
-  <?php echo t('Admin Key'); ?>: <input type="password" name="VideoAdminPassword" value="<?php echo $_SESSION['video']['VideoAdminPassword']; ?>" size="5">
-  <input type="submit" class="submit" value="<?php echo t('Update') ?>">
+  <?php echo t('Title search'); ?>: <input id="filter_box" name="search" value="<?php echo isset($Filter_Search) ? $Filter_Search : ''; ?>" onchange="filter();" onkeyup="filter();">
+  <?php echo t('Admin Key'); ?>: <input type="password" name="VideoAdminPassword" value="<?php echo isset($_SESSION['video']['VideoAdminPassword']) ? $_SESSION['video']['VideoAdminPassword'] : ''; ?>" size="5">
+  <input type="submit" class="submit" value="<?php echo t('Save') ?>">
  </form>
 </td>
 <td style="text-align: right;">
  <?php 
-     $video_count = count($All_Videos);
+     $video_count = (isset($All_Videos) && (is_array($All_Videos) || $All_Videos instanceof Countable)) ? count($All_Videos) : 0;
      if( $video_count ) {
          echo tn('$1 video', '$1 videos', $video_count); 
      } else {
@@ -304,26 +308,27 @@
 
 <div id="path">
   <b><?php echo t('Directory Structure'); ?></b><hr>
-  <a class="<?php if (!isset($_SESSION['video']['path']) || $_SESSION['video']['path'] == '/') echo 'active'; ?>" href="<?php echo root_url; ?>video?path=/"><?php echo t('Root Directory'); ?></a><br><br>
-  <?php foreach ($PATH_TREE as $path) { output_path_picker($path); } ?>
+  <a class="<?php if (!isset($_SESSION['video']['path']) || $_SESSION['video']['path'] == '/') echo 'active'; ?>" href="<?php echo defined('root_url') ? root_url : ''; ?>video?path=/"><?php echo t('Root Directory'); ?></a><br><br>
+  <?php if (isset($PATH_TREE) && is_iterable($PATH_TREE)) { foreach ($PATH_TREE as $path) { output_path_picker($path); } } ?>
 </div>
 
 <?php
-    foreach ($All_Videos as $video) {
+    if (isset($All_Videos) && is_iterable($All_Videos)) {
+        foreach ($All_Videos as $video) {
 ?>
     <div id="<?php echo $video->intid; ?>" class="video" onmouseover="video_popup(this.id)" onmouseout="hovering_video_id = null;">
         <div id="<?php echo $video->intid; ?>_categoryid" class="hidden"><?php echo $video->category; ?></div>
-        <div id="<?php echo $video->intid; ?>_genre" class="hidden"><?php if ($video->genres != null && count($video->genres)) foreach ($video->genres as $genre) echo ' '.$genre.' ';?></div>
+        <div id="<?php echo $video->intid; ?>_genre" class="hidden"><?php if ($video->genres != null && (is_array($video->genres) || $video->genres instanceof Countable) && count($video->genres)) foreach ($video->genres as $genre) echo ' '.$genre.' ';?></div>
         <div id="<?php echo $video->intid; ?>_browse" class="hidden"><?php echo $video->browse; ?></div>
         <div id="<?php echo $video->intid; ?>-title" class="title">
             <a href="<?php echo $video->url; ?>"><?php echo html_entities($video->title); ?></a><?php
                   if (($video->season > 0) && ($video->episode >= 0))
                       printf('(S%02d E%02d)', $video->season, $video->episode);
-                  if (strlen($video->subtitle) > 0)
+                  if (is_string($video->subtitle) && strlen($video->subtitle) > 0)
                       echo '<br>' . html_entities($video->subtitle);
             ?></div>
-        <div id="<?php echo $video->intid; ?>_img">                <img <?php if ($_SESSION["show_video_covers"] && (strcmp($video->cover_url, '') != 0)) echo 'src="'.$video->cover_url.'"'; echo ' width="'.$video->cover_scaled_width.'" height="'.$video->cover_scaled_height.'"'; ?> alt="<?php echo t('Missing Cover'); ?>"></div>
-        <div id="<?php echo $video->intid; ?>-category">           <?php echo $Category_String[$video->category]; ?></div>
+        <div id="<?php echo $video->intid; ?>_img">                <img <?php if (isset($_SESSION["show_video_covers"]) && $_SESSION["show_video_covers"] && (strcmp((string)$video->cover_url, '') != 0)) echo 'src="'.$video->cover_url.'"'; echo ' width="'.$video->cover_scaled_width.'" height="'.$video->cover_scaled_height.'"'; ?> alt="<?php echo t('Missing Cover'); ?>"></div>
+        <div id="<?php echo $video->intid; ?>-category">           <?php echo isset($Category_String[$video->category]) ? $Category_String[$video->category] : ''; ?></div>
         <div id="<?php echo $video->intid; ?>_playtime">           <?php echo nice_length($video->length * 60); ?></div>
         <div id="<?php echo $video->intid; ?>_imdb">               <?php if ($video->inetref != '00000000') { ?><a href="<?php echo makeImdbWebUrl($video->inetref); ?>"><?php echo $video->inetref ?></a><?php } ?></div>
         <div class="command">
@@ -332,10 +337,11 @@
         </div>
     </div>
 <?php
+        }
     }
 ?>
 </div>
 <?php
 
 // Print the page footer
-    require 'modules/_shared/tmpl/'.tmpl.'/footer.php';
+    require 'modules/_shared/tmpl/'.(defined('tmpl') ? tmpl : '').'/footer.php';

@@ -35,7 +35,7 @@ class Modules implements Cache_Enabled {
             tailored_error('no_modules');
 
     // Sort the modules
-        uasort($Modules, 'Modules::by_module_sort');
+        uasort($Modules, array(self::class, 'by_module_sort'));
 
         self::$Modules = $Modules;
         unset($Modules);

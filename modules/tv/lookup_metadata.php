@@ -14,12 +14,12 @@
 
     $url = "Video/LookupVideo";
     $args = array( 
-                   'Title'        => $_REQUEST['title'],
-                   'Subtitle'     => $_REQUEST['subtitle'],
-                   'Inetref'      => $_REQUEST['inetref'],
-                   'Season'       => $_REQUEST['season'],
-                   'Episode'      => $_REQUEST['episode'],
-                   'GrabberType'  => $_REQUEST['grabbertype'],
-                   'AllowGeneric' => $_REQUEST['allowgeneric']);
+                   'Title'        => isset($_REQUEST['title']) ? $_REQUEST['title'] : null,
+                   'Subtitle'     => isset($_REQUEST['subtitle']) ? $_REQUEST['subtitle'] : null,
+                   'Inetref'      => isset($_REQUEST['inetref']) ? $_REQUEST['inetref'] : null,
+                   'Season'       => isset($_REQUEST['season']) ? $_REQUEST['season'] : null,
+                   'Episode'      => isset($_REQUEST['episode']) ? $_REQUEST['episode'] : null,
+                   'GrabberType'  => isset($_REQUEST['grabbertype']) ? $_REQUEST['grabbertype'] : null,
+                   'AllowGeneric' => isset($_REQUEST['allowgeneric']) ? $_REQUEST['allowgeneric'] : null);
 
     echo MythBackend::find()->httpRequestAsJson($url, $args);

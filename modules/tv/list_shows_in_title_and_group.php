@@ -11,6 +11,9 @@
     else
         $group = $_REQUEST['group'];
 
+    $title_param = isset($_REQUEST['title']) ? $_REQUEST['title'] : '';
+
+    $SubTitles = array();
     $sh = $db->query('SELECT IF( IFNULL(recorded.subtitle, "") = "",
                                  recorded.title,
                                  recorded.subtitle) AS subtitle,
@@ -22,14 +25,14 @@
                     ORDER BY recorded.originalairdate ASC
                     ',
                     ($group == 'All' ? '%' : $group),
-                    $_REQUEST['title']
+                    $title_param
                     );
     while ($subtitles = $sh->fetch_row())
         $SubTitles[] = $subtitles;
 
-    $Page_Previous_Location = 'tv/list_titles_in_group?group='.htmlentities($group);
+    $Page_Previous_Location = 'tv/list_titles_in_group?group='.htmlspecialchars($group, ENT_QUOTES, 'UTF-8');
     $Page_Previous_Location_Name = $group;
-    $Page_Title_Short = $_REQUEST['title'];
+    $Page_Title_Short = $title_param;
 
 // Load the class for this page
     require_once tmpl_dir.'list_shows_in_title_and_group.php';

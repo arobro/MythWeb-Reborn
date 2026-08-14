@@ -13,4 +13,4 @@
         $_REQUEST['view_module'] = 'tv';
 
 // Not really much to do here but print the list of modules
-    require 'modules/_shared/tmpl/'.tmpl.'/welcome.php';
+    require 'modules/_shared/tmpl/'.(defined('tmpl') ? tmpl : 'default').'/welcome.php';

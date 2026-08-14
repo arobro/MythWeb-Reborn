@@ -17,37 +17,37 @@
     <th><?php echo t('prefer_channum') ?>:</th>
     <td><input class="radio" type="checkbox" name="prefer_channum"
          title="<?php echo t('prefer_channum') ?>"
-         <?php if ($_SESSION['prefer_channum']) echo ' CHECKED'; ?>></td>
+         <?php if (!empty($_SESSION['prefer_channum'])) echo ' CHECKED'; ?>></td>
 </tr>
 <tr>
     <th><?php echo t('show_popup_info'); ?>:</th>
     <td><input class=radio" type="checkbox" name="show_popup_info"
                title="<?php echo t('show_popup_info'); ?>"
-               <?php if ($_SESSION['show_popup_info']) echo ' CHECKED'; ?>></td>
+               <?php if (!empty($_SESSION['show_popup_info'])) echo ' CHECKED'; ?>></td>
 </tr>
 <tr>
     <th><?php echo t('show_channel_icons'); ?>:</th>
     <td><input class=radio" type="checkbox" name="show_channel_icons"
                title="<?php echo t('show_channel_icons'); ?>"
-               <?php if ($_SESSION['show_channel_icons']) echo ' CHECKED'; ?>></td>
+               <?php if (!empty($_SESSION['show_channel_icons'])) echo ' CHECKED'; ?>></td>
 </tr>
 <tr>
     <th><?php echo t('sortby_channum'); ?>:</th>
     <td><input class=radio" type="checkbox" name="sortby_channum"
                title="<?php echo t('sortby_channum'); ?>"
-               <?php if ($_SESSION['sortby_channum']) echo ' CHECKED'; ?>></td>
+               <?php if (!empty($_SESSION['sortby_channum'])) echo ' CHECKED'; ?>></td>
 </tr>
 <tr>
     <th><?php echo t('genre_colors'); ?>:</th>
     <td><input class=radio" type="checkbox" name="genre_colors"
                title="<?php echo t('genre_colors'); ?>"
-               <?php if ($_SESSION['genre_colors']) echo ' CHECKED'; ?>></td>
+               <?php if (!empty($_SESSION['genre_colors'])) echo ' CHECKED'; ?>></td>
 </tr>
 <tr>
     <th><?php echo t('show_video_covers'); ?>:</th>
     <td><input class=radio" type="checkbox" name="show_video_covers"
                title="<?php echo t('show_video_covers'); ?>"
-               <?php if ($_SESSION['show_video_covers']) echo ' CHECKED'; ?>></td>
+               <?php if (!empty($_SESSION['show_video_covers'])) echo ' CHECKED'; ?>></td>
 </tr>
 <!--
 <tr>
@@ -55,10 +55,9 @@
     <td><select name="cache_engine" id="cache_engine">
             <?php
                 foreach(Cache::$Engines as $engine) {
-                    eval("\$enabled = $engine::isEnabled();");
-                    if ($enabled) {
+                    if (is_callable([$engine, 'isEnabled']) && $engine::isEnabled()) {
                         ?>
-                        <option value="<?php echo $engine;?>" <?php if ($_SESSION['cache_engine'] == $engine) echo 'SELECTED'; ?>><?php echo t($engine); ?>
+                        <option value="<?php echo $engine;?>" <?php if (isset($_SESSION['cache_engine']) && $_SESSION['cache_engine'] == $engine) echo 'SELECTED'; ?>><?php echo t($engine); ?>
                         <?php
                     }
                 }

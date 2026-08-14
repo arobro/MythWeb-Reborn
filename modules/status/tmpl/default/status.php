@@ -13,6 +13,9 @@
     $page_title = 'MythTV Backend Status';
 
 // Custom headers
+    if (!isset($headers) || !is_array($headers)) {
+        $headers = array();
+    }
     $headers[] = '<link rel="stylesheet" type="text/css" href="'.skin_url.'/status.css">';
 
 // Print the page header
@@ -20,7 +23,7 @@
 
 // Print the content itself
     echo "<div id=\"content_wrapper\">\n"
-        .str_replace(array('<br />','<hr />'), array('<br>','<hr>'),$status)
+        .str_replace(array('<br />','<hr />'), array('<br>','<hr>'), (string)($status ?? ''))
         ."\n</div>";
 
 // Print the page footer

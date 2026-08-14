@@ -24,10 +24,10 @@
 <div id="list_head" class="clearfix">
     <form method="get" id="program_listing" action="<?php echo root_url ?>tv/channel">
     <div id="x_current_time">
-<?php   if ($_SESSION["show_channel_icons"] && !empty($this_channel->icon)) { ?>
+<?php   if (!empty($_SESSION["show_channel_icons"]) && !empty($this_channel->icon)) { ?>
             <img src="<?php echo $this_channel->icon ?>">
 <?php   } ?>
-        Channel <?php echo $this_channel->channum ?>:  <?php echo $this_channel->callsign ?> on <?php echo strftime('%B %e, %Y', $_SESSION['list_time']) ?>
+        Channel <?php echo $this_channel->channum ?>:  <?php echo $this_channel->callsign ?> on <?php echo date('F j, Y', $_SESSION['list_time']) ?>
     </div>
     <table id="x-jumpto" class="commandbox commands" border="0" cellspacing="0" cellpadding="0">
     <tr>
@@ -82,7 +82,7 @@
 
     // Print the content
     ?><tr class="<?php echo $show->css_class ?>">
-    <td class="nowrap" align="center"><a href="<?php echo root_url ?>tv/list?time=<?php echo $show->starttime ?>"><?php echo strftime($_SESSION['time_format'], $show->starttime) ?> - <?php echo strftime($_SESSION['time_format'], $show->endtime) ?></a></td>
+    <td class="nowrap" align="center"><a href="<?php echo root_url ?>tv/list?time=<?php echo $show->starttime ?>"><?php echo isset($_SESSION['time_format2']) ? date($_SESSION['time_format2'], $show->starttime) : date('H:i', $show->starttime) ?> - <?php echo isset($_SESSION['time_format2']) ? date($_SESSION['time_format2'], $show->endtime) : date('H:i', $show->endtime) ?></a></td>
     <td class="<?php echo $show->css_class ?>"><?php
         if ($show->hdtv)
                echo '<span class="hdtv_icon">HD</span>';

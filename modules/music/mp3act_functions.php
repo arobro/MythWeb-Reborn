@@ -425,7 +425,7 @@ function musicLookup($type, $itemid)
         <div class="right">
         <a class="music" href="#" onclick="updateBox(\'browse\',0); return false;"
          title="'.t('Browse').'">'.t('Back').'</a></div>
-        <h2 class="music">'.t('Songs for Genre')." '".utf8_encode($itemid)."'</h2></div>
+        <h2 class="music">'.t('Songs for Genre')." '".mb_convert_encoding($itemid, 'UTF-8', 'ISO-8859-1')."'</h2></div>
         <p><strong>".t('Songs').'</strong></p>
         <ul class="music">';
 
@@ -433,7 +433,7 @@ function musicLookup($type, $itemid)
                'FROM music_songs AS ms '.
                'LEFT JOIN music_artists AS ma ON ms.artist_id=ma.artist_id '.
                'LEFT JOIN music_genres AS mg ON ms.genre_id=mg.genre_id '.
-               'WHERE genre='.utf8_encode($sql_itemid);
+               'WHERE genre='.mb_convert_encoding($sql_itemid, 'UTF-8', 'ISO-8859-1');
 
       $sh = $db->query($query);
       if (!$sh)
@@ -835,8 +835,8 @@ function musicLookup($type, $itemid)
         'GROUP BY ms.album_id '.
         'ORDER BY playcount DESC '.
         'LIMIT 40';
-      $result = mysqli_query($query);
-      if (!$result)
+      $sh = $db->query($query);
+      if (!$sh)
         break;
 
       $output = '<div class="head">
@@ -846,12 +846,12 @@ function musicLookup($type, $itemid)
           title="'.t('Return to Statistics Page').'">'.t('Back').'</a></div>
         <h2 class="music">'.t('Top Played Albums').'</h2></div>
         <ul class="music">';
-      while ($row = mysqli_fetch_array($result))
+      while ($row = $sh->fetch_array())
       {
         $output .= getHtmlAlbum($row['album_id'], $row['album_name'],
           $row['artist_name'], '', '', '', $row['playcount']."x");
       }
-      mysqli_free_result($result);
+      $sh->finish();
       $output .= '</ul>';
       break;
 
@@ -864,8 +864,8 @@ function musicLookup($type, $itemid)
         'GROUP BY ms.artist_id '.
         'ORDER BY playcount DESC '.
         'LIMIT 40';
-      $result = mysqli_query($query);
-      if (!$result)
+      $sh = $db->query($query);
+      if (!$sh)
         break;
 
       $output = '<div class="head">
@@ -875,12 +875,12 @@ function musicLookup($type, $itemid)
           title="'.t('Return to Statistics Page').'">'.t('Back').'</a></div>
         <h2 class="music">'.t('Top Played Artist').'</h2></div>
         <ul class="music">';
-      while ($row = mysqli_fetch_array($result))
+      while ($row = $sh->fetch_array())
       {
         $output .= getHtmlArtist($row['artist_id'], $row['artist_name'],
           '', '', '', $row['playcount']."x");
       }
-      mysqli_free_result($result);
+      $sh->finish();
       $output .= '</ul>';
       break;
 
@@ -919,8 +919,8 @@ function musicLookup($type, $itemid)
         'GROUP BY ms.album_id '.
         'ORDER BY ms.lastplay DESC '.
         'LIMIT 40';
-      $result = mysqli_query($query);
-      if (!$result)
+      $sh = $db->query($query);
+      if (!$sh)
         break;
 
       $output = '<div class="head">
@@ -930,12 +930,12 @@ function musicLookup($type, $itemid)
           title="'.t('Return to Statistics Page').'">'.t('Back').'</a></div>
         <h2 class="music">'.t('Recently Played Albums').'</h2></div>
         <ul class="music">';
-      while ($row = mysqli_fetch_array($result))
+      while ($row = $sh->fetch_array())
       {
         $output .= getHtmlAlbum($row['album_id'], $row['album_name'],
           $row['artist_name'], '', '', '', date('m.d.Y', $row['playdate']));
       }
-      mysqli_free_result($result);
+      $sh->finish();
       $output .= '</ul>';
       break;
 
@@ -1646,7 +1646,7 @@ function getPlaylistM3u($id, $quality, $depth = 0)
     if ($song_id > 0)
     {
       $row = $song_info[$song_id];
-      $tmp .= '#EXTINF:'.intval($row['length']).','.utf8_decode($row['artist_name']).' - '.utf8_decode($row['name'])."\n";
+      $tmp .= '#EXTINF:'.intval($row['length']).','.mb_convert_encoding($row['artist_name'], 'ISO-8859-1', 'UTF-8').' - '.mb_convert_encoding($row['name'], 'ISO-8859-1', 'UTF-8')."\n";
       $tmp .= stream_url().'stream?i='.$row['song_id']."\n";
     }
     else if ($song_id < 1)
@@ -1694,7 +1694,7 @@ function play($type, $id, $quality = 'high')
     {
       while ($row = $sh->fetch_array())
       {
-        $tmp .= '#EXTINF:'.intval($row['length']).','.utf8_decode($row['artist_name']).' - '.utf8_decode($row['name'])."\n";
+        $tmp .= '#EXTINF:'.intval($row['length']).','.mb_convert_encoding($row['artist_name'], 'ISO-8859-1', 'UTF-8').' - '.mb_convert_encoding($row['name'], 'ISO-8859-1', 'UTF-8')."\n";
         $tmp .= stream_url().'stream?i='.$row['song_id']."\n";
       }
       $sh->finish();

@@ -13,12 +13,12 @@
     $Frontends = MythFrontend::findFrontends();
 
 // Make sure this is an array
-    if (!is_array($_SESSION['remote']['frontends']))
+    if (!isset($_SESSION['remote']['frontends']) || !is_array($_SESSION['remote']['frontends']))
         $_SESSION['remote']['frontends'] = array();
 
 // Ping a frontend (via ajax) and add it to the list?  (or remove if it fails)
-    if ($_REQUEST['ping']) {
-        if ($Frontends[$_REQUEST['ping']]) {
+    if (isset($_REQUEST['ping'])) {
+        if (isset($Frontends[$_REQUEST['ping']])) {
             if ($Frontends[$_REQUEST['ping']]->connect(2)) {
                 $loc = $Frontends[$_REQUEST['ping']]->query_location();
                 $_SESSION['remote']['frontends'][$_REQUEST['ping']] = $loc;
@@ -31,7 +31,7 @@
         exit;
     }
 // Unping a frontend?
-    elseif ($_REQUEST['unping']) {
+    elseif (isset($_REQUEST['unping'])) {
         unset($_SESSION['remote']['frontends'][$_REQUEST['unping']]);
         echo 1;
         exit;
@@ -39,18 +39,22 @@
 
 // Use the new directory structure?
     if (empty($_REQUEST['type'])) {
-        $_REQUEST['type'] = $Path[1] ? $Path[1] : $_SESSION['remote']['type'];
+        $_REQUEST['type'] = !empty($Path[1]) ? $Path[1] : (isset($_SESSION['remote']['type']) ? $_SESSION['remote']['type'] : null);
     }
 
 // Unknown send type?  Use the first one found
-    if (empty($_REQUEST['type']) || !array_key_exists($_REQUEST['type'], Modules::getModuleProperty('remote', 'links'))) {
-        $_REQUEST['type'] = reset(array_keys(Modules::getModuleProperty('remote', 'links')));
+    $remoteLinks = Modules::getModuleProperty('remote', 'links');
+    if (empty($_REQUEST['type']) || !is_array($remoteLinks) || !array_key_exists($_REQUEST['type'], $remoteLinks)) {
+        // Fix for PHP 8+: reset() now requires a variable reference, not a function return value like array_keys()
+        $keys = is_array($remoteLinks) ? array_keys($remoteLinks) : array();
+        $_REQUEST['type'] = reset($keys);
     }
 
 // Send a command?  (via ajax)
     elseif (isset($_REQUEST['command'])) {
         if (is_array($_SESSION['remote']['frontends']) && count($_SESSION['remote']['frontends'])) {
             foreach (array_keys($_SESSION['remote']['frontends']) as $host) {
+                if (!isset($Frontends[$host])) continue;
                 $frontend = $Frontends[$host];
                 switch ($_REQUEST['type']) {
                     case 'keys':

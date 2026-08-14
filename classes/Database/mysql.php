@@ -23,118 +23,113 @@
  * @uses        Database_Query_mysql.php
  *
  **/
-
 /**
- * Database connection class for mysql.
+ * Database connection class for mysqli.
  **/
 class Database_mysql extends Database {
 
-/**
- * Constructor
- *
- * @param string $db_name      Name of the database we're connecting to
- * @param string $login        Login name to use when connecting
- * @param string $password     Password to use when connecting
- * @param string $server       Database server to connect to (Default: localhost)
- * @param string $port         Port or socket address to connect to
- **/
-    function __construct($db_name, $login, $password, $server='localhost', $port=NULL, $options=NULL) {
-    // Attempt to make sure the extension is loaded
-        if (!extension_loaded('mysql')) {
-        // This function is deprecated as of php5, so we see if we can use it
-            if (function_exists('dl')) {
-            // Attempt to allow dl to be used
-                ini_set('enable_dl', true);
-                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
-                    dl('php_mysql.dll');
-                else
-                    dl('mysql.so');
-            }
+    /**
+     * Constructor
+     *
+     * @param string          $db_name   Name of the database we're connecting to
+     * @param string          $login     Login name to use when connecting
+     * @param string          $password  Password to use when connecting
+     * @param string          $server    Database server to connect to (Default: localhost)
+     * @param int|string|null $port      Port or socket address to connect to
+     **/
+    public function __construct(string $db_name, string $login, string $password, string $server = 'localhost', int|string|null $port = null) {
+        // Ensure the modern mysqli extension is available
+        if (!extension_loaded('mysqli')) {
+            $this->error("The mysqli PHP extension is not enabled in php.ini.");
+            return;
         }
 
-        // Silence exceptions in PHP 8.1.0+
+        // Silence exceptions to keep backwards-compatible error handling
         mysqli_report(MYSQLI_REPORT_OFF);
 
-    // Connect to the database
-        $this->dbh = @mysqli_connect($port ? "$server:$port" : $server, $login, $password)
-            or $this->error("Can't connect to the database server.");
-        if ($this->dbh) {
-            @mysqli_select_db($db_name, $this->dbh)
-                or $this->error("Can't access the database file.");
+        // Normalize port and socket options
+        $port_num = !empty($port) && is_numeric($port) ? (int)$port : null;
+        $socket   = !empty($port) && !is_numeric($port) ? (string)$port : null;
+
+        // Connect to the database
+        $this->dbh = @mysqli_connect($server, $login, $password, null, $port_num, $socket);
+
+        if (!$this->dbh) {
+            $this->error("Can't connect to the database server.");
+            return;
+        }
+
+        if (!@mysqli_select_db($this->dbh, $db_name)) {
+            $this->error("Can't access the database file.");
         }
     }
 
-/**
- * Escapes a string and returns it with added quotes. On top of normal escaping,
- * this also escapes ? characters so it's safe to use in other db queries.
- *
- * @param string $string    string to escape
- *
- * @return string           escaped string
- **/
-    function escape($string) {
-    // Null?
-        if (is_null($string))
+    /**
+     * Escapes a string and returns it with added quotes. On top of normal escaping,
+     * this also escapes ? characters so it's safe to use in other db queries.
+     *
+     * @param string|null $string string to escape
+     *
+     * @return string       escaped string
+     **/
+    public function escape(?string $string): string {
+        if (is_null($string)) {
             return 'NULL';
-    // Just a string
-        return str_replace('?', '\\?', "'".mysqli_real_escape_string($this->dbh, $string)."'");
+        }
+        return str_replace('?', '\\?', "'" . mysqli_real_escape_string($this->dbh, $string) . "'");
     }
 
-/**
- * Changes the regexp-special square brackets used for character class/range
- * operations to the "match any single character" operator, '.'.  This function
- * does not do database-special character escapes.
- *
- * @param string $string    string to escape
- *
- * @return string           escaped string
- **/
-    function escape_regex($string) {
-    // Null?
-        if (is_null($string))
+    /**
+     * Changes the regexp-special square brackets used for character class/range
+     * operations to the "match any single character" operator, '.'.
+     *
+     * @param string|null $string string to escape
+     *
+     * @return string       escaped string
+     **/
+    public function escape_regex(?string $string): string {
+        if (is_null($string)) {
             return 'NULL';
-    // Just a string
-        $escaped_string = str_replace('[', '.', $string);
-        return str_replace(']', '.', $escaped_string);
+        }
+        return str_replace(['[', ']'], '.', $string);
     }
 
-/**
- *  Returns an un-executed Database_Query_mysql object
- *
- *  @param string $query    The query string
- *
- *  @return Database_Query_mysql
- **/
-    function &prepare($query) {
-        $new_query = new Database_Query_mysql($this, $query);
-        return $new_query;
+    /**
+     * Returns an un-executed Database_Query_mysql object
+     *
+     * @param string $query The query string
+     *
+     * @return Database_Query_mysql
+     **/
+    public function prepare(string $query): Database_Query_mysql {
+        return new Database_Query_mysql($this, $query);
     }
 
-/**
- * @return string The most recent error string
- **/
-    function _errstr() {
-        return $this->dbh ? mysqli_error($this->dbh) : mysqli_error();
+    /**
+     * @return string The most recent error string
+     **/
+    public function _errstr(): string {
+        return $this->dbh ? mysqli_error($this->dbh) : (mysqli_connect_error() ?? '');
     }
 
-/**
- * @return int The most recent error number
- **/
-    function _errno() {
-        return $this->dbh ? mysqli_errno($this->dbh) : mysqli_errno();
+    /**
+     * @return int The most recent error number
+     **/
+    public function _errno(): int {
+        return $this->dbh ? mysqli_errno($this->dbh) : mysqli_connect_errno();
     }
 
-/**
- * @return string Information about the mysql server
- **/
-    function server_info() {
+    /**
+     * @return string Information about the mysql server
+     **/
+    public function server_info(): string {
         return mysqli_get_server_info($this->dbh);
     }
 
-/**
- * @return bool true on success
- **/
-    function close() {
+    /**
+     * @return bool true on success
+     **/
+    public function close(): bool {
         return mysqli_close($this->dbh);
     }
 

@@ -11,6 +11,7 @@
     else
         $group = $_REQUEST['group'];
 
+    $Titles = array();
     $sh = $db->query('SELECT recorded.title,
                              COUNT(recorded.subtitle) AS `count`
                         FROM recorded

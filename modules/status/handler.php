@@ -15,7 +15,7 @@
     $statusport = setting('BackendStatusPort', '%');
 
 // XML mode?
-    $xml_param = ($Path[1] == 'xml') ? '/xml' : '/GetStatusHTML';
+    $xml_param = (isset($Path[1]) && $Path[1] == 'xml') ? '/xml' : '/GetStatusHTML';
 
 // Make sure the content is interpreted as UTF-8
     header('Content-Type:  text/html; charset=UTF-8');
@@ -35,9 +35,12 @@
         $status = implode("\n", file("http://$masterhost:$statusport/Status$xml_param"));
     }
 
+// Ensure $status is a string in case request/execution fails
+    $status = is_string($status) ? $status : '';
+
 // Extract the page title
     preg_match('#<title>(.+?)</title>#s', $status, $title);
-    $title = $title[1];
+    $title = $title[1] ?? '';
 
 // Clean up the page, and add some invisible content with the actual URL grabbed
     $status = "<!-- Obtained from:  http://$masterhost:$statusport -->\n"

@@ -183,7 +183,7 @@ EOF;
         <div id="help_wrapper">
             <div id="help_box">
                 <div id="help_text_default" style="position:relative;">
-                MythWeb: <?php echo strftime($_SESSION['date_statusbar'], time()) ?>
+                MythWeb: <?php echo date($_SESSION['date_statusbar2'], time()) ?>
                 </div>
                 <div id="help_text" style="display:none;">
                 </div>

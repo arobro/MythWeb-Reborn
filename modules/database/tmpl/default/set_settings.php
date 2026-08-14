@@ -8,7 +8,7 @@
  *
  **/
 ?>
-<form class="form" method="post" action="<?php echo form_action; ?>">
+<form class="form" method="post" action="<?php echo defined('form_action') ? form_action : ''; ?>">
 
 <h3>Actions</h3>
 

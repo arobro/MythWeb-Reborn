@@ -25,17 +25,18 @@
 	$shows = array();
 	$query = '';
 	
-	
-	foreach($results as $result) {
-		if (!strlen($result['tms_id']))
-			continue;
-		if (strlen($query))
-			$query .= ' OR ';
-		$query .= " program.seriesid = '{$result['tms_id']}'";
-		
+	if (is_array($results)) {
+		foreach($results as $result) {
+			if (empty($result['tms_id']))
+				continue;
+			if (strlen($query))
+				$query .= ' OR ';
+			$query .= " program.seriesid = '{$result['tms_id']}'";
+			
+		}
 	}
 	
-	$shows =& load_all_program_data(time(), strtotime('+1 month'), NULL, false, strlen($query) ? "({$query})" : 'FALSE', true);
+	$shows = load_all_program_data(time(), strtotime('+1 month'), NULL, false, strlen($query) ? "({$query})" : 'FALSE', true);
 
 // Load the class for this page
     require_once tmpl_dir.'recommended.php';

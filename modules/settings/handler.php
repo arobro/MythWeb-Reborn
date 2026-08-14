@@ -15,8 +15,8 @@
     }
 
 // Restore the last used path?
-    if (empty($Path[1]) && is_array($_SESSION['settings']['last']))
-        array_splice($Path, 1, count($Path), $_SESSION['settings']['last']);
+    if (empty($Path[1]) && isset($_SESSION['settings']['last']) && is_array($_SESSION['settings']['last']))
+        array_splice($Path, 1, is_array($Path) ? count($Path) : 0, $_SESSION['settings']['last']);
 
 // Empty or unknown module?
     if (empty($Path[1]) || empty($Settings[$Path[1]])) {
@@ -51,13 +51,13 @@
 
 // Load the handler for whatever section was requested so that we can do any
 // necessary pre-processing.
-    require_once modules_path."/$Path[1]/set_$Path[2].php";
+    require_once modules_path."/{$Path[1]}/set_{$Path[2]}.php";
 
 // Print the settings header page
     require_once tmpl_dir.'header.php';
 
 // And the content that goes along with this section
-    require_once 'modules/'.$Path[1].'/tmpl/'.tmpl."/set_$Path[2].php";
+    require_once 'modules/'.$Path[1].'/tmpl/'.tmpl."/set_{$Path[2]}.php";
 
 // And lastly, the footer
     require_once tmpl_dir.'footer.php';
@@ -77,8 +77,8 @@
                 .'<select name="settings_host" onchange="$(\'host_form\').submit()">';
             foreach ($Settings_Hosts as $host => $name) {
                 $s .= '<option value="'.html_entities($host).'"';
-                if ($host == $_SESSION['settings']['host'])
-                    $s .= ' SELECTED';
+                if (isset($_SESSION['settings']['host']) && $host == $_SESSION['settings']['host'])
+                    $s .= ' selected="selected"';
                 $s .= '>'.html_entities($name).'</option>';
             }
             $s .= '<noscript><input type="submit" value="'.t('Set Host').'"></noscript>';

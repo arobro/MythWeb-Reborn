@@ -21,7 +21,7 @@
     require_once 'includes/sorting.php';
 
 // Path-based search overrides request-based search type.
-    if ($Path[2]) {
+    if (isset($Path[2])) {
     // Don't forget to take all of the remaining path.
         $_SESSION['search']['s']    = implode('/', array_splice($Path, 2));
         $_SESSION['search']['type'] = 'q';
@@ -29,7 +29,7 @@
     }
 
 // Sorting should re-trigger the search
-    if ($_REQUEST['sortby'])
+    if (isset($_REQUEST['sortby']))
         $_REQUEST['search'] = true;
 
 // Pull in updates
@@ -41,29 +41,29 @@
 
     if (isset($_REQUEST['as'])) {
         $_SESSION['search']['as']            = $_REQUEST['as'];
-        $_SESSION['search']['af']            = $_REQUEST['af'];
-        $_SESSION['search']['aj']            = $_REQUEST['aj'];
-        $_SESSION['search']['ctype']         = $_REQUEST['ctype'];
-        $_SESSION['search']['categories']    = $_REQUEST['categories'];
-        $_SESSION['search']['hd']            = $_REQUEST['hd']              ? true : false;
-        $_SESSION['search']['commfree']      = $_REQUEST['commfree']        ? true : false;
-        $_SESSION['search']['unwatched']     = $_REQUEST['unwatched']       ? true : false;
-        $_SESSION['search']['scheduled']     = $_REQUEST['scheduled']       ? true : false;
-        $_SESSION['search']['generic']       = $_REQUEST['generic']         ? true : false;
-        $_SESSION['search']['distinctTitle'] = $_REQUEST['distinctTitle']   ? true : false;
-        $_SESSION['search']['stars_gt']      = floatVal($_REQUEST['stars_gt']);
-        $_SESSION['search']['stars_lt']      = floatVal($_REQUEST['stars_lt']);
-        $_SESSION['search']['airdate_start'] = trim($_REQUEST['airdate_start']);
-        $_SESSION['search']['airdate_end']   = trim($_REQUEST['airdate_end']);
-        $_SESSION['search']['starttime']     = trim($_REQUEST['starttime']);
-        $_SESSION['search']['endtime']       = trim($_REQUEST['endtime']);
+        $_SESSION['search']['af']            = $_REQUEST['af'] ?? null;
+        $_SESSION['search']['aj']            = $_REQUEST['aj'] ?? null;
+        $_SESSION['search']['ctype']         = $_REQUEST['ctype'] ?? null;
+        $_SESSION['search']['categories']    = $_REQUEST['categories'] ?? array();
+        $_SESSION['search']['hd']            = !empty($_REQUEST['hd']);
+        $_SESSION['search']['commfree']      = !empty($_REQUEST['commfree']);
+        $_SESSION['search']['unwatched']     = !empty($_REQUEST['unwatched']);
+        $_SESSION['search']['scheduled']     = !empty($_REQUEST['scheduled']);
+        $_SESSION['search']['generic']       = !empty($_REQUEST['generic']);
+        $_SESSION['search']['distinctTitle'] = !empty($_REQUEST['distinctTitle']);
+        $_SESSION['search']['stars_gt']      = floatVal($_REQUEST['stars_gt'] ?? 0);
+        $_SESSION['search']['stars_lt']      = floatVal($_REQUEST['stars_lt'] ?? 0);
+        $_SESSION['search']['airdate_start'] = trim($_REQUEST['airdate_start'] ?? '');
+        $_SESSION['search']['airdate_end']   = trim($_REQUEST['airdate_end'] ?? '');
+        $_SESSION['search']['starttime']     = trim($_REQUEST['starttime'] ?? '');
+        $_SESSION['search']['endtime']       = trim($_REQUEST['endtime'] ?? '');
     }
 
 // Session defaults
-    if (!is_array($_SESSION['search']['ctype']) || empty($_SESSION['search']['ctype']))
+    if (empty($_SESSION['search']['ctype']) || !is_array($_SESSION['search']['ctype']))
         $_SESSION['search']['ctype'] = Program::category_types();
 
-    if (!is_array($_SESSION['search']['categories']) || empty($_SESSION['search']['categories']))
+    if (empty($_SESSION['search']['categories']) || !is_array($_SESSION['search']['categories']))
         $_SESSION['search']['categories'] = array();
 
     if (!isset($_SESSION['search']['stars_gt']) || !isset($_SESSION['search']['stars_lt'])) {
@@ -76,19 +76,19 @@
     if (!isset($_SESSION['search']['endtime'])) {
         $_SESSION['search']['endtime'] = '+ 2 weeks';
     }
-    if (!is_array($_SESSION['search']['as']) || empty($_SESSION['search']['as'])) {
-        if (!is_string($_SESSION['search']['as']))
+    if (empty($_SESSION['search']['as']) || !is_array($_SESSION['search']['as'])) {
+        if (!isset($_SESSION['search']['as']) || !is_string($_SESSION['search']['as']))
             $_SESSION['search']['as'] = '';
         $_SESSION['search']['as'] = array($_SESSION['search']['as']);
     }
-    if (!is_array($_SESSION['search']['af'])) {
-        if (gettype($_SESSION['search']['af']) == 'string')
+    if (empty($_SESSION['search']['af']) || !is_array($_SESSION['search']['af'])) {
+        if (isset($_SESSION['search']['af']) && gettype($_SESSION['search']['af']) == 'string')
             $_SESSION['search']['af'] = array(array($_SESSION['search']['af']));
         else
             $_SESSION['search']['af'] = array(array('title'));
     }
-    if (!is_array($_SESSION['search']['aj'])) {
-        if (gettype($_SESSION['search']['aj']) == 'string')
+    if (empty($_SESSION['search']['aj']) || !is_array($_SESSION['search']['aj'])) {
+        if (isset($_SESSION['search']['aj']) && gettype($_SESSION['search']['aj']) == 'string')
             $_SESSION['search']['aj'] = array($_SESSION['search']['aj']);
         else
             $_SESSION['search']['aj'] = array('AND');
@@ -108,7 +108,7 @@
             $fixedj[] = $_SESSION['search']['aj'][$i];
     // Fields for this string
         $fields = array();
-        if (is_array($_SESSION['search']['af'][$i])) {
+        if (isset($_SESSION['search']['af'][$i]) && is_array($_SESSION['search']['af'][$i])) {
             foreach ($_SESSION['search']['af'][$i] as $j => $field) {
                 if (!preg_match('/\S/', $field)) {
                     if ($j > 0)
@@ -135,6 +135,8 @@
         $_SESSION['search']['stars_lt'] = $tmp;
     }
 
+    $Results = array();
+
 // Actually perform a search?
     if (isset($_REQUEST['search'])) {
     // Start the query
@@ -142,7 +144,7 @@
         $extra_query = array();
 
     // Advanced search?
-        if ($_SESSION['search']['type'] == 'a') {
+        if (($_SESSION['search']['type'] ?? '') == 'a') {
         // Which kinds of programs are we searching through?
             $extra_query[] = 'program.category_type IN ('
                              .implode(',', $db->escape_array($_SESSION['search']['ctype']))
@@ -168,17 +170,13 @@
         // Date range
             if (preg_match('/\S/', $_SESSION['search']['starttime'])) {
                 $tmpdate = strtotime($_SESSION['search']['starttime']);
-                if ($tmpdate == false) {
-                }
-                else {
+                if ($tmpdate !== false) {
                     $extra_query[] = 'program.starttime>='.$db->escape(date('Y-m-d H:i:s', $tmpdate));
                 }
             }
             if (preg_match('/\S/', $_SESSION['search']['endtime'])) {
                 $tmpdate = strtotime($_SESSION['search']['endtime']);
-                if ($tmpdate == false) {
-                }
-                else {
+                if ($tmpdate !== false) {
                     $extra_query[] = 'program.endtime<='.$db->escape(date('Y-m-d H:i:s', $tmpdate));
                 }
             }
@@ -188,9 +186,7 @@
                 if (!preg_match('/\D/', $tmpdate))  // for some reason, strtotime doesn't like dates like 2000
                     $tmpdate .= '-01-01';
                 $tmpdate = strtotime($tmpdate);
-                if ($tmpdate == false) {
-                }
-                else {
+                if ($tmpdate !== false) {
                     $extra_query[] = 'IF(program.originalairdate IS NULL,'
                                     .'program.airdate>='        .$db->escape(date('Y',     $tmpdate)).','
                                     .'program.originalairdate>='.$db->escape(date('Y-m-d', $tmpdate)).')';
@@ -201,9 +197,7 @@
                 if (!preg_match('/\D/', $tmpdate))  // for some reason, strtotime doesn't like dates like 2000
                     $tmpdate .= '-01-01';
                 $tmpdate = strtotime($tmpdate);
-                if ($tmpdate == false) {
-                }
-                else {
+                if ($tmpdate !== false) {
                     $extra_query[] = 'IF(program.originalairdate IS NULL,'
                                     .'program.airdate<='        .$db->escape(date('Y',     $tmpdate)).','
                                     .'program.originalairdate<='.$db->escape(date('Y-m-d', $tmpdate)).')';
@@ -257,7 +251,7 @@
             }
         }
     // Canned search?
-        elseif (preg_match('/^\s*canned:\s*(.+)\s*$/i', $_SESSION['search']['s'], $search_name)) {
+        elseif (preg_match('/^\s*canned:\s*(.+)\s*$/i', $_SESSION['search']['s'] ?? '', $search_name)) {
             $search_name = $search_name[1];
         // Load the canned searches
             require_once 'modules/tv/canned_searches.conf.php';
@@ -273,7 +267,7 @@
     // Quick search is the default
         else {
         // Make a backup so we can edit it without affecting the original
-            $search_str = $_SESSION['search']['s'];
+            $search_str = $_SESSION['search']['s'] ?? '';
         // If it starts with hd: it's an hd-only search
             if (preg_match('/^hd:\s*(.+)$/', $search_str, $match)) {
                 $extra_query[] = 'program.hdtv & 1';
@@ -307,17 +301,21 @@
         }
 
     // HDTV only?
-        if ($_SESSION['search']['hd'])
+        if (!empty($_SESSION['search']['hd']))
             $extra_query[] = 'program.hdtv & 1';
-        if ($_SESSION['search']['generic'])
+        if (!empty($_SESSION['search']['generic']))
             $extra_query[] = 'program.generic = 0';
     // Commercial-free channels only?
-        if ($_SESSION['search']['commfree'])
+        if (!empty($_SESSION['search']['commfree']))
             $extra_query[] = 'channel.commmethod=-2';
 
     // Finish the query and add any extra parameters
-        if ($query)
+        if ($query) {
+            if (is_array($query)) {
+                $query = implode(' OR ', $query);
+            }
             $query = "($query)";
+        }
         if (count($extra_query) > 0) {
             if ($query)
                 $query .= ' AND ';
@@ -325,18 +323,19 @@
         }
 
     // Search!
-        if (!empty($query))
+        if (!empty($query)) {
             $tmpdate = strtotime($_SESSION['search']['starttime']);
-        if ($tmpdate == false) {
-            $Results =& load_all_program_data(time(), strtotime('+1 month'), NULL, false, $query, $_SESSION['search']['distinctTitle']);
-        } else {
-            $Results =& load_all_program_data($tmpdate, strtotime('+1 month'), NULL, false, $query, $_SESSION['search']['distinctTitle']);
+            if ($tmpdate === false) {
+                $Results = load_all_program_data(time(), strtotime('+1 month'), NULL, false, $query, $_SESSION['search']['distinctTitle']);
+            } else {
+                $Results = load_all_program_data($tmpdate, strtotime('+1 month'), NULL, false, $query, $_SESSION['search']['distinctTitle']);
+            }
         }
 
     }
 
 // Only show unwatched shows?
-    if ($_SESSION['search']['unwatched'] && count($Results)) {
+    if (!empty($_SESSION['search']['unwatched']) && count($Results)) {
         foreach ($Results as $key => $show) {
             switch($show->recstatus) {
                 case 'PreviousRecording':
@@ -350,7 +349,7 @@
     }
 
 // Ignore will record shows?
-    if ($_SESSION['search']['scheduled'] && count($Results)) {
+    if (!empty($_SESSION['search']['scheduled']) && count($Results)) {
         foreach ($Results as $key => $show) {
             switch($show->recstatus) {
                 case 'WillRecord':
@@ -376,11 +375,11 @@
     foreach ($Results as $key => $show) {
         $tkey = md5($show->channel->channum.':'.$show->channel->callsign.':'.$show->title.':'.$show->subtitle.':'.$show->description);
         $skey = $show->channel->name.$show->starttime.$tkey;
-        if($seen[$skey]){
+        if(isset($seen[$skey])){
             unset($Results[$key]);
             continue;
         }else{
-            $titles[$tkey][$key] =& $Results[$key];
+            $titles[$tkey][$key] = &$Results[$key];
             $seen[$skey] = true;
         }
     }
@@ -390,7 +389,7 @@
     foreach ($Results as $key => $show) {
         $tkey = md5($show->channel->channum.':'.$show->channel->callsign.':'.$show->title.':'.$show->subtitle.':'.$show->description);
     // Populate extra_showings info for other instances of this show
-        if (count($titles[$tkey]) > 1) {
+        if (isset($titles[$tkey]) && count($titles[$tkey]) > 1) {
             foreach (array_keys($titles[$tkey]) as $key2) {
                 if ($key == $key2)
                     continue;
@@ -398,10 +397,10 @@
             }
         }
     // Delete duplicate showings if we're sorting by title or category (genre)
-        if (!in_array($_SESSION['search_sortby'][0]['field'], array('title', 'category'))) {
+        if (isset($_SESSION['search_sortby'][0]['field']) && !in_array($_SESSION['search_sortby'][0]['field'], array('title', 'category'))) {
             continue;
         }
-        elseif ($seen[$tkey]) {
+        elseif (!empty($seen[$tkey])) {
             unset($titles[$tkey][$key]);
             unset($Results[$key]);
         }
@@ -495,7 +494,7 @@
                 echo '<p><select name="aj[', $i, ']">';
                 foreach (array('AND', 'OR') as $join) {
                     echo '<option';
-                    if ($join == $_SESSION['search']['aj'][$i])
+                    if (isset($_SESSION['search']['aj'][$i]) && $join == $_SESSION['search']['aj'][$i])
                         echo ' SELECTED';
                     echo ">$join</option>";
                 }
@@ -574,7 +573,7 @@
         for ($x=0; $x<=max_stars; $x++) {
             $v = number_format($x/max_stars, 3, '.', '');
             echo '<option value="', $v, '"';
-            if ($v == $_SESSION['search'][$name])
+            if (isset($_SESSION['search'][$name]) && $v == $_SESSION['search'][$name])
                 echo ' SELECTED';
             echo '>', str_repeat(star_character, $x), '</option>';
         }

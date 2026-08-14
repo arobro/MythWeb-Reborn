@@ -49,17 +49,21 @@
                      );
 
 // Transcoder names
-    global $Transcoders;
+    global $Transcoders, $db;
     $Transcoders = array();
     $Transcoders[0] = 'Autodetect';
-    $result = $db->query('SELECT recordingprofiles.id,
-                                 recordingprofiles.name
-                            FROM recordingprofiles
-                            JOIN profilegroups
-                              ON recordingprofiles.profilegroup  = profilegroups.id
-                           WHERE cardtype                        = "TRANSCODE"
-                             AND recordingprofiles.name         != "RTjpeg/MPEG4"
-                             AND recordingprofiles.name         != "MPEG2"
-                           ');
-    while ($row = $result->fetch_assoc())
-        $Transcoders[$row['id']] = $row['name'];
+    if (isset($db) && is_object($db)) {
+        $result = $db->query('SELECT recordingprofiles.id,
+                                     recordingprofiles.name
+                                FROM recordingprofiles
+                                JOIN profilegroups
+                                  ON recordingprofiles.profilegroup  = profilegroups.id
+                               WHERE cardtype                        = "TRANSCODE"
+                                 AND recordingprofiles.name         != "RTjpeg/MPEG4"
+                                 AND recordingprofiles.name         != "MPEG2"
+                               ');
+        if ($result) {
+            while ($row = $result->fetch_assoc())
+                $Transcoders[$row['id']] = $row['name'];
+        }
+    }

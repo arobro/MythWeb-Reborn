@@ -9,7 +9,7 @@
  *
  **/
 
-    if (tmpl == 'default') {
+    if (isset($tmpl) && $tmpl == 'default') {
     // Add the module
         $Modules['remote'] = array('path'        => 'remote',
                                    'sort'        => 6,

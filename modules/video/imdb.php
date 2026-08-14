@@ -18,13 +18,14 @@
     if (is_null(setting('web_video_imdb_path', hostname)))
         die(json_encode(array('error' => array(t('Video: Error: IMDB: Not Found')))));
 
-    switch($_REQUEST['action'])
+    $action = $_REQUEST['action'] ?? '';
+    switch($action)
     {
         case 'lookup':
-            lookup($_REQUEST['id'], $_REQUEST['title']);
+            lookup($_REQUEST['id'], $_REQUEST['title'] ?? '');
             break;
         case 'grab':
-            grab($_REQUEST['id'], $_REQUEST['number']);
+            grab($_REQUEST['id'], $_REQUEST['number'] ?? '');
             break;
         case 'metadata':
             metadata($_REQUEST['id']);
@@ -48,20 +49,22 @@
                                  );
 
         $dupe = array();
-        foreach ($options[$imdbwebtype] as $option) {
-            $cmd = $imdb.str_replace('%%TITLE%%', $title, $option);
-            exec($cmd, $output, $retval);
-            if ($retval == 255)
-                $return['warning'][] = "IMDB Command $cmd exited with return value $retval";
-            if (!count($output))
-                continue;
-            foreach ($output as $line) {
-                list($imdbid, $title) = explode(':', $line, 2);
-                if ($dupe[$imdbid])
+        if (isset($options[$imdbwebtype])) {
+            foreach ($options[$imdbwebtype] as $option) {
+                $cmd = $imdb.str_replace('%%TITLE%%', $title, $option);
+                exec($cmd, $output, $retval);
+                if ($retval == 255)
+                    $return['warning'][] = "IMDB Command $cmd exited with return value $retval";
+                if (!count($output))
                     continue;
-                $dupe[$imdbid] = true;
-                $return['matches'][] = array('imdbid' => $imdbid,
-                                             'title'  => $title);
+                foreach ($output as $line) {
+                    list($imdbid, $title) = explode(':', $line, 2);
+                    if (isset($dupe[$imdbid]))
+                        continue;
+                    $dupe[$imdbid] = true;
+                    $return['matches'][] = array('imdbid' => $imdbid,
+                                                 'title'  => $title);
+                }
             }
         }
     }
@@ -70,6 +73,7 @@
     {
         global $db;
         global $return;
+        global $DEBUG;
         $return['action'] = 'grab';
         $imdb             = setting('web_video_imdb_path', hostname);
         $imdbwebtype      = setting('web_video_imdb_type', hostname);
@@ -83,6 +87,7 @@
             $return['warning'][] = 'MythWeb now requires use of the Coverart Storage Group.';
             return;
         }
+        $artwork_dir = null;
         foreach ($artwork_dirs as $dir) {
             if (is_dir($dir) || is_link($dir)) {
                 $artwork_dir = $dir;
@@ -98,7 +103,7 @@
         $data = array();
         $cmd = "$imdb -D $imdbnum";
         exec($cmd, $lines, $retval);
-        if ($retval == 255 || $DEBUG) {
+        if ($retval == 255 || !empty($DEBUG)) {
             $return['warning'][] = "IMDB Command $cmd exited with return value $retval";
         }
         $valid = FALSE;
@@ -115,7 +120,7 @@
         }
     // If the file already exists, use it, don't bother regrabbing
         if (!file_exists($posterfile)) {
-            $posterurl = $data['coverart'];
+            $posterurl = $data['coverart'] ?? '';
             if (!is_writable($artwork_dir))
                 $return['warning'][] = t('Video: Warning: Artwork');
             else {
@@ -146,14 +151,14 @@
                                  length       = ?,
                                  coverfile    = ?
                            WHERE intid        = ?',
-                         $data['title'],
-                         $data['director'],
-                         $data['plot'],
-                         $data['movierating'],
+                         $data['title'] ?? null,
+                         $data['director'] ?? null,
+                         $data['plot'] ?? null,
+                         $data['movierating'] ?? null,
                          $imdbnum,
-                         $data['year'],
-                         $data['userrating'],
-                         $data['runtime'],
+                         $data['year'] ?? null,
+                         $data['userrating'] ?? null,
+                         $data['runtime'] ?? null,
                          ( @filesize($posterfile) > 0 ? "$imdbnum.jpg" : 'No Cover' ),
                          $id
                          );

@@ -17,11 +17,12 @@
     require_once 'modules/tv/classes/Schedule.php';
 
 // Save changes
-    if ($_REQUEST['save'] && $_REQUEST['old_name']) {
-        if ($_REQUEST['old_name'] == 'Default')
+    if (!empty($_REQUEST['save']) && !empty($_REQUEST['old_name'])) {
+        if ($_REQUEST['old_name'] == 'Default') {
             $_REQUEST['name'] = 'Default';
-        else
-            $_REQUEST['name'] = trim($_REQUEST['name']);
+        } else {
+            $_REQUEST['name'] = trim($_REQUEST['name'] ?? '');
+        }
     // Check for name collision
         if ($_REQUEST['name'] != $_REQUEST['old_name']) {
             $test = $db->query_col('SELECT name FROM playgroup WHERE name = ?',
@@ -40,31 +41,32 @@
                                      (name, titlematch, skipahead, skipback, timestretch, jump)
                               VALUES (?, ?, ?, ?, ?, ?)',
                        $_REQUEST['name'],
-                       $_REQUEST['titlematch'],
-                       $_REQUEST['skipahead'],
-                       $_REQUEST['skipback'],
-                       $_REQUEST['timestretch'],
-                       $_REQUEST['jump']
+                       $_REQUEST['titlematch'] ?? null,
+                       $_REQUEST['skipahead'] ?? null,
+                       $_REQUEST['skipback'] ?? null,
+                       $_REQUEST['timestretch'] ?? null,
+                       $_REQUEST['jump'] ?? null
                       );
             $_REQUEST['playgroup'] = $_REQUEST['name'];
         }
     }
 // Delete group
-    elseif ($_REQUEST['delete']) {
-        if ($_REQUEST['old_name'] != 'Default') {
+    elseif (!empty($_REQUEST['delete'])) {
+        if (($_REQUEST['old_name'] ?? '') != 'Default') {
             $db->query('DELETE FROM playgroup WHERE name = ?',
                        $_REQUEST['old_name']);
         }
     }
 
 // Load a playgroup to edit
-    if ($_REQUEST['new_group']) {
+    if (!empty($_REQUEST['new_group'])) {
         $group = $db->query_assoc('SELECT * FROM playgroup WHERE name = "Default"');
         $group['name'] = 'NEW GROUP';
     }
     else {
+        $playgroup = $_REQUEST['playgroup'] ?? 'Default';
         $group = $db->query_assoc('SELECT * FROM playgroup WHERE name = ?',
-                                  $_REQUEST['playgroup']);
+                                  $playgroup);
         if (empty($group)) {
             $_REQUEST['playgroup'] = 'Default';
             $group = $db->query_assoc('SELECT * FROM playgroup WHERE name = ?',

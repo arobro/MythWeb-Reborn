@@ -9,9 +9,7 @@
  *
  **/
 
-// Sometimes a function will use if class_exists, and thus we shouldn't fail if we can't find it.
-
-    function autoload($className) {
+    spl_autoload_register(function ($className) {
         global $Path;
         $className = str_replace('_', '/', $className);
         if (file_exists("classes/$className.php"))
@@ -32,6 +30,4 @@
             return false;
         }
         return true;
-    }
-
-    spl_autoload_register('autoload');
+    });

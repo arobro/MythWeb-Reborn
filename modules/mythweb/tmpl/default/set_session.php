@@ -3,39 +3,53 @@
  * Configure MythWeb Session info
  *
  * @license     GPL
- *
  * @package     MythWeb
  * @subpackage  Settings
- *
- **/
+ */
 ?>
 
-<form class="form" method="post" action="<?php echo form_action ?>">
+<form class="form" method="post" action="<?= htmlspecialchars(form_action, ENT_QUOTES, 'UTF-8') ?>">
 
-<table border="0" cellspacing="0" cellpadding="0">
-<tr class="x-sep">
-    <th><?php echo t('MythWeb Template') ?>:</th>
-    <td><?php template_select('tmpl', tmpl) ?></td>
-</tr><tr class="x-sep">
-    <th><?php echo t('MythWeb Skin') ?>:</th>
-    <td><?php skin_select('skin', skin) ?></td>
-</tr><tr class="x-sep">
-    <th><?php echo t('Language') ?>:</th>
-    <td><?php language_select() ?></td>
-</tr><tr>
-    <td align="center"><input type="reset"  class="submit" value="<?php echo t('Reset') ?>"></td>
-    <td align="center"><input type="submit" class="submit" name="save" value="<?php echo t('Save') ?>"></td>
-</tr>
-</table>
+    <table border="0" cellspacing="0" cellpadding="0">
+        <tr class="x-sep">
+            <th scope="row"><?= htmlspecialchars(t('MythWeb Skin'), ENT_QUOTES, 'UTF-8') ?>:</th>
+            <td><?php skin_select('skin', skin); ?></td>
+        </tr>
+        <tr class="x-sep">
+            <th scope="row"><?= htmlspecialchars(t('Language'), ENT_QUOTES, 'UTF-8') ?>:</th>
+            <td><?php language_select(); ?></td>
+        </tr>
+        <tr>
+            <td align="center">
+                <input type="reset" class="submit" value="<?= htmlspecialchars(t('Reset'), ENT_QUOTES, 'UTF-8') ?>">
+            </td>
+            <td align="center">
+                <input type="submit" class="submit" name="save" value="<?= htmlspecialchars(t('Save'), ENT_QUOTES, 'UTF-8') ?>">
+            </td>
+        </tr>
+    </table>
 
 </form>
 
-<script type="text/javascript">
-    current_skin = $('skin').getValue();
-    Event.observe('skin', 'change', function() {
-        skin = $('skin').getValue();
-        $$('head link').each(function(s) { s.href = s.href.replace('skins/'+current_skin, 'skins/'+skin); });
-        current_skin = skin;
-        return;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const skinSelect = document.getElementById('skin');
+    
+    if (skinSelect) {
+        let currentSkin = skinSelect.value;
+
+        skinSelect.addEventListener('change', () => {
+            const newSkin = skinSelect.value;
+            const stylesheets = document.querySelectorAll('head link[rel="stylesheet"]');
+
+            stylesheets.forEach(link => {
+                if (link.href.includes(`skins/${currentSkin}`)) {
+                    link.href = link.href.replace(`skins/${currentSkin}`, `skins/${newSkin}`);
+                }
+            });
+
+            currentSkin = newSkin;
         });
+    }
+});
 </script>

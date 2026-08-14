@@ -58,9 +58,6 @@
     require_once 'includes/css.php';
     require_once 'includes/mouseovers.php';
 
-// Detect mobile users
-    require_once 'includes/mobile.php';
-
 // Setup the skins and themes
     require_once 'includes/skin.php';
 

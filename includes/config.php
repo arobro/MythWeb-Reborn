@@ -40,19 +40,13 @@
 
 // The size of timeslots, in seconds (1800 = 30 minutes)
     if ($_SESSION['timeslot_size'] < 300) {
-        switch (tmpl) {
-            case 'wap': $_SESSION['timeslot_size'] = 900;  break;
-            default:    $_SESSION['timeslot_size'] = 300;  break;
-        }
+        $_SESSION['timeslot_size'] = 300;
     }
     define('timeslot_size', $_SESSION['timeslot_size']);
 
 // The number of time slots to display in the channel listing
     if ($_SESSION['num_time_slots'] < 3) {
-        switch (tmpl) {
-            case 'wap': $_SESSION['num_time_slots'] = 12; break;
-            default:    $_SESSION['num_time_slots'] = 36; break;
-        }
+           $_SESSION['num_time_slots'] = 36;
     }
     define('num_time_slots', $_SESSION['num_time_slots']);
 

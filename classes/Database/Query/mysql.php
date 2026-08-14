@@ -30,162 +30,133 @@
  **/
 class Database_Query_mysql extends Database_Query {
 
-/**
- * Executes the query that was previously passed to the constructor.
- *
- * @param mixed  $arg      Query arguments to escape and insert at ? placeholders in $query
- * @param mixed  ...       Additional arguments
- **/
-    function execute() {
-    // Load the function arguments, minus the query itself, which we already extracted
-        $args = func_get_args();
-    // Split out sub-arrays, etc..
+    /**
+     * Executes the query that was previously passed to the constructor.
+     *
+     * @param mixed ...$args Query arguments to escape and insert at ? placeholders in $query
+     */
+    public function execute(...$args): void {
+        // Process sub-arrays, etc.
         $args = Database::smart_args($args);
-    // Were enough arguments passed in?
-        if (count($args) != $this->num_args_needed)
-            trigger_error('Database_Query called with '.count($args)." arguments, but requires $this->num_args_needed.", E_USER_ERROR);
-    // Finish any previous statements
+
+        // Check if enough arguments were passed in
+        if (count($args) !== $this->num_args_needed) {
+            trigger_error('Database_Query called with ' . count($args) . " arguments, but requires {$this->num_args_needed}.", E_USER_ERROR);
+        }
+
+        // Finish any previous statements
         $this->finish();
-    // Replace in the arguments
+
+        // Replace in the arguments
         $this->last_query = '';
         foreach ($this->query as $part) {
             $this->last_query .= $part;
             if (count($args)) {
                 $arg = array_shift($args);
                 $this->last_query .= is_null($arg)
-                                        ? 'NULL'
-                                        : "'".mysqli_real_escape_string($arg)."'";
+                    ? 'NULL'
+                    : "'" . mysqli_real_escape_string($this->dbh, (string)$arg) . "'";
             }
         }
-    // Perform the query
-    // If we don't have a valid connection, fataly error out.
+
+        // Perform the query
         if ($this->dbh === false) {
             $this->db->error();
             trigger_error($this->db->error, E_USER_ERROR);
         }
-        $this->sh = mysqli_query($this->last_query, $this->dbh);
 
-    // Cache these
+        $this->sh = mysqli_query($this->dbh, $this->last_query);
+
+        // Cache execution metadata
         if (is_bool($this->sh)) {
             $this->insert_id     = mysqli_insert_id($this->dbh);
             $this->affected_rows = mysqli_affected_rows($this->dbh);
-        }
-        else {
+        } else {
             $this->num_rows      = mysqli_num_rows($this->sh);
         }
 
         if ($this->sh === false) {
-            if ($this->db->fatal_errors)
-                trigger_error('SQL Error: '.mysqli_error($this->dbh).' [#'.mysqli_errno($this->dbh).']', E_USER_ERROR);
-            else
+            if ($this->db->fatal_errors) {
+                trigger_error('SQL Error: ' . mysqli_error($this->dbh) . ' [#' . mysqli_errno($this->dbh) . ']', E_USER_ERROR);
+            } else {
                 $this->db->error();
+            }
         }
     }
 
-/**
- * The following routines basically replicate the mysql functions built into
- * php.  The only difference is that the resource handle gets passed-in
- * automatically.  eg.
- *
- *      mysqli_fetch_row($result);   ->  $sh->fetch_row();
- *      mysqli_affected_rows($dbh);  ->  $sh->affected_rows();
- **/
-
-/**
- * Fetch a single column
- * @return mixed
- **/
-    function fetch_col() {
-        list($return) = mysqli_fetch_row($this->sh);
-        return $return;
+    /**
+     * Fetch a single column
+     */
+    public function fetch_col(): mixed {
+        $row = mysqli_fetch_row($this->sh);
+        return $row[0] ?? null;
     }
 
-    function fetch_cols() {
-        $return = array();
-        while ($col = $this->fetch_col())
+    /**
+     * Fetch all remaining values of the first column into an array
+     */
+    public function fetch_cols(): array {
+        $return = [];
+        while (($col = $this->fetch_col()) !== null) {
             $return[] = $col;
+        }
         return $return;
     }
 
-/**
- * Fetch a single row
- *
- * @link http://www.php.net/manual/en/function.mysql-fetch-row.php
- * @return array
- **/
-    function fetch_row() {
-        return mysqli_fetch_row($this->sh);
+    /**
+     * Fetch a single row
+     */
+    public function fetch_row(): ?array {
+        $result = mysqli_fetch_row($this->sh);
+        return $result !== false ? $result : null;
     }
 
-/**
- * Fetch a single assoc row
- *
- * @link http://www.php.net/manual/en/function.mysql-fetch-assoc.php
- * @return assoc
- **/
-    function fetch_assoc() {
-        return mysqli_fetch_assoc($this->sh);
+    /**
+     * Fetch a single assoc row
+     */
+    public function fetch_assoc(): ?array {
+        $result = mysqli_fetch_assoc($this->sh);
+        return $result !== false ? $result : null;
     }
 
-/**
- * Fetch a single row as an array containing both numeric and assoc fields
- *
- * @link http://www.php.net/manual/en/function.mysql-fetch-array.php
- * @return assoc
- **/
-    function fetch_array($result_type=MYSQLI_BOTH) {
+    /**
+     * Fetch a single row as an array containing both numeric and assoc fields
+     */
+    public function fetch_array(int $result_type = MYSQLI_BOTH): array|false|null {
         return mysqli_fetch_array($this->sh, $result_type);
     }
 
-/**
- * Fetch a single row as an object
- *
- * @link http://www.php.net/manual/en/function.mysql-fetch-object.php
- * @return object
- **/
-    function fetch_object() {
-        return mysqli_fetch_object($this->sh);
+    /**
+     * Fetch a single row as an object
+     */
+    public function fetch_object(): ?object {
+        $result = mysqli_fetch_object($this->sh);
+        return $result !== false ? $result : null;
     }
 
-/**
- * @link http://www.php.net/manual/en/function.mysql-data-seek.php
- * @return bool
- **/
-    function data_seek($row_number) {
+    public function data_seek(int $row_number): bool {
         return mysqli_data_seek($this->sh, $row_number);
     }
 
-/**
- * @link http://www.php.net/manual/en/function.mysql-num-rows.php
- * @return int
- **/
-    function num_rows() {
-        return $this->num_rows;
+    public function num_rows(): int {
+        return (int) $this->num_rows;
     }
 
-/**
- * @link http://www.php.net/manual/en/function.mysql-data-seek.php
- * @return int
- **/
-    function affected_rows() {
-        return $this->affected_rows;
+    public function affected_rows(): int {
+        return (int) $this->affected_rows;
     }
 
-/**
- * @link http://www.php.net/manual/en/function.mysql-insert-id.php
- * @return int
- **/
-    function insert_id() {
+    public function insert_id(): int|string {
         return $this->insert_id;
     }
 
-/**
- * For anal people like me who like to free up memory manually
- **/
-    function finish() {
-        if ($this->sh && is_resource($this->sh))
+    /**
+     * Free memory and reset handle
+     */
+    public function finish(): void {
+        if (isset($this->sh) && $this->sh instanceof mysqli_result) {
             mysqli_free_result($this->sh);
+        }
         unset($this->sh);
     }
-
 }

@@ -31,8 +31,9 @@
     <td width="5%"><?php  echo t('visible')       ?></td>
     <td width="5%"><?php  echo t('useonairguide') ?></td>
 </tr><?php
-    foreach ($channels as $chanid) {
-        $channel =& Channel::find($chanid);
+    if (!empty($channels) && is_array($channels)) {
+        foreach ($channels as $chanid) {
+            $channel = Channel::find($chanid);
 ?><tr class="settings" align="center">
     <td><input type="checkbox" name="channel[<?php echo $channel->chanid ?>][delete]" id="delete_<?php echo $channel->chanid ?>" value="true" /></td>
     <td><?php echo html_entities($channel->sourceid) ?></td>
@@ -52,6 +53,7 @@
     <td><input type="checkbox"       name="channel[<?php echo $channel->chanid ?>][visible]"       value="1"<?php if (!empty($channel->visible))       echo ' CHECKED' ?> /></td>
     <td><input type="checkbox"       name="channel[<?php echo $channel->chanid ?>][useonairguide]" value="1"<?php if (!empty($channel->useonairguide)) echo ' CHECKED' ?> /></td>
 </tr><?php
+        }
     }
 ?>
 </table>

@@ -12,7 +12,7 @@
     global $db;
 
 // Pull video ID
-    $vid_id = $_GET['Id'];
+    $vid_id = $_GET['Id'] ?? null;
 
 // Get filename
     list($fname) = $db->query_row('SELECT filename
@@ -20,7 +20,8 @@
                                     WHERE intid = ?', $vid_id);
 
 // Mime type
-    switch (substr($fname, strrpos($fname, '.')+1)) {
+    $ext = strtolower(pathinfo($fname ?? '', PATHINFO_EXTENSION));
+    switch ($ext) {
         case 'mpg':
         case 'mpeg':
             $mime = 'video/mpeg';

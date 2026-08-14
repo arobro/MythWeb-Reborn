@@ -26,10 +26,12 @@
 
     <ul style="list-style-type: circle">
 <?php
-    foreach(array_keys($Canned_Searches) as $name ) {
-    // We have to clean the link like this or it results in 404 errors from mod_rewrite
-        echo '        <li><a href="'.root_url.'tv/search/'.str_replace('%2F', '/', rawurlencode('canned:'.$name)).'">'
-            .$name."</a></li>\n";
+    if (!empty($Canned_Searches) && is_array($Canned_Searches)) {
+        foreach(array_keys($Canned_Searches) as $name ) {
+        // We have to clean the link like this or it results in 404 errors from mod_rewrite
+            echo '        <li><a href="'.root_url.'tv/search/'.str_replace('%2F', '/', rawurlencode('canned:'.$name)).'">'
+                .$name."</a></li>\n";
+        }
     }
 ?>
     </ul>

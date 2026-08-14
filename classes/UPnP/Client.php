@@ -28,11 +28,11 @@ class UPnP_Client {
 
         preg_match('/<Database><Host>(.*)<\/Host><Port>(.*)<\/Port><UserName>(.*)<\/UserName><Password>(.*)<\/Password><Name>(.*)<\/Name><Type>.*<\/Type><\/Database>/', $info, $matches);
         return array(
-            'host' => $matches[1],
-            'port' => $matches[2],
-            'user' => $matches[3],
-            'pass' => $matches[4],
-            'name' => $matches[5]);
+            'host' => $matches[1] ?? '',
+            'port' => $matches[2] ?? '',
+            'user' => $matches[3] ?? '',
+            'pass' => $matches[4] ?? '',
+            'name' => $matches[5] ?? '');
     }
 
     static function discoverIps($schema = null, $ipCount = 1) {
@@ -48,9 +48,11 @@ class UPnP_Client {
             return false;
         }
 
+        $ips = array();
         foreach ($devices as $device) {
-            preg_match('/LOCATION: http:\/\/(.*):([0-9]+).*/', $device, $matches);
-			$ips[] = [$matches[1], $matches[2]];
+            if (preg_match('/LOCATION: http:\/\/(.*):([0-9]+).*/', $device, $matches)) {
+                $ips[] = [$matches[1], $matches[2]];
+            }
         }
 
 		if (count($ips) == 0)
@@ -100,8 +102,8 @@ class UPnP_Client {
         }
 
     // Prep to receive UPnP data
+        $valid = false;
         while ($port < self::$maxPort) {
-            $valid = true;
             $socket = socket_create($domain, $type, $protocol);
             $valid = @socket_bind($socket, $address, $port);
             if ($valid)
@@ -134,9 +136,10 @@ class UPnP_Client {
             $read = array($socket);
             $write = array();
             $except = array();
+            $data = '';
             @socket_recv($socket, $data, 1024, MSG_DONTWAIT);
-            $data = trim($data);
-            if (is_null($data) || strlen($data) == 0)
+            $data = trim((string)$data);
+            if (strlen($data) == 0)
                 usleep(10000);
             else
                 $devices[] = $data;

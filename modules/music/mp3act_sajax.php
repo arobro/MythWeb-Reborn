@@ -27,7 +27,7 @@ if (!isset($SAJAX_INCLUDED)) {
     // Helper function to return the script's own URI.
     //
     function sajax_get_my_uri() {
-        return $_SERVER["REQUEST_URI"];
+        return $_SERVER["REQUEST_URI"] ?? '';
     }
     $sajax_remote_uri = sajax_get_my_uri();
 
@@ -44,7 +44,7 @@ if (!isset($SAJAX_INCLUDED)) {
         elseif ($type == "integer") {
             return "parseInt($value)";
         }
-        elseif ($type == "double") {
+        elseif ($type == "double" || $type == "float") {
             return "parseFloat($value)";
         }
         elseif ($type == "array" || $type == "object" ) {
@@ -69,7 +69,7 @@ if (!isset($SAJAX_INCLUDED)) {
             return $s . " }";
         }
         else {
-            $esc_val = sajax_esc($value);
+            $esc_val = sajax_esc((string)$value);
             $s = "'$esc_val'";
             return $s;
         }
@@ -296,7 +296,7 @@ if (!isset($SAJAX_INCLUDED)) {
     // javascript escape a value
     function sajax_esc($val)
     {
-        $val = str_replace("\\", "\\\\", $val);
+        $val = str_replace("\\", "\\\\", (string)$val);
         $val = str_replace("\r", "\\r", $val);
         $val = str_replace("\n", "\\n", $val);
         $val = str_replace("'", "\\'", $val);
@@ -358,4 +358,3 @@ if (!isset($SAJAX_INCLUDED)) {
 
     $SAJAX_INCLUDED = 1;
 }
-

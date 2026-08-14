@@ -17,15 +17,15 @@
     }
 
 // Use the new directory structure?
-    if (!$_REQUEST['chanid'] && !$_REQUEST['starttime']) {
-        $_REQUEST['chanid']    = $Path[2];
-        $_REQUEST['starttime'] = $Path[3];
-        $_REQUEST['manualid']  = $Path[4];
+    if (empty($_REQUEST['chanid']) && empty($_REQUEST['starttime'])) {
+        $_REQUEST['chanid']    = $Path[2] ?? null;
+        $_REQUEST['starttime'] = $Path[3] ?? null;
+        $_REQUEST['manualid']  = $Path[4] ?? null;
     }
 // Just in case
-    $_GET['chanid']    = intVal($_REQUEST['chanid']);
-    $_GET['starttime'] = intVal($_REQUEST['starttime']);
-    $_GET['manualid']  = intVal($_REQUEST['manualid']);
+    $_GET['chanid']    = intval($_REQUEST['chanid'] ?? 0);
+    $_GET['starttime'] = intval($_REQUEST['starttime'] ?? 0);
+    $_GET['manualid']  = intval($_REQUEST['manualid'] ?? 0);
 
 // Set to defaults
     if ( !isset($_SESSION['recording_details'] )) {
@@ -37,11 +37,11 @@
     }
 
     if ( isset($_POST['change_display'])) {
-        $_SESSION['recording_details']['show_Conflict']          = $_POST['Conflict'];
-        $_SESSION['recording_details']['show_PreviousRecording'] = $_POST['PreviousRecording'];
-        $_SESSION['recording_details']['show_EarlierShowing']    = $_POST['EarlierShowing'];
-        $_SESSION['recording_details']['show_CurrentRecording']  = $_POST['CurrentRecording'];
-        $_SESSION['recording_details']['show_WillRecord']        = $_POST['WillRecord'];
+        $_SESSION['recording_details']['show_Conflict']          = $_POST['Conflict'] ?? null;
+        $_SESSION['recording_details']['show_PreviousRecording'] = $_POST['PreviousRecording'] ?? null;
+        $_SESSION['recording_details']['show_EarlierShowing']    = $_POST['EarlierShowing'] ?? null;
+        $_SESSION['recording_details']['show_CurrentRecording']  = $_POST['CurrentRecording'] ?? null;
+        $_SESSION['recording_details']['show_WillRecord']        = $_POST['WillRecord'] ?? null;
     }
 
 // Auto-expire -- only available for javascript templates
@@ -49,7 +49,7 @@
         $sh = $db->query('UPDATE recorded
                              SET autoexpire = ?
                            WHERE chanid = ? AND starttime = FROM_UNIXTIME(?)',
-                         $_REQUEST['toggle_autoexpire'] ? 1 : 0,
+                         !empty($_REQUEST['toggle_autoexpire']) ? 1 : 0,
                          $_GET['chanid'],
                          $_GET['starttime']);
     // Report back, and then exit.
@@ -72,23 +72,23 @@
     // Starttime in the past -- See if it's a recording
         if ($_GET['starttime'] < time()) {
             $record = MythBackend::find()->queryProgramRows('QUERY_RECORDING TIMESLOT '.$_GET['chanid'].' '.unix2mythtime($_GET['starttime']), 1);
-            if (is_array($record[0])) {
+            if (isset($record[0]) && is_array($record[0])) {
                 $prog = new Program($record[0]);
                 if ($_GET['chanid'] == $prog->chanid && $_GET['starttime'] == $prog->recstartts) {
-                    $program =& $prog;
+                    $program = $prog;
                 }
             }
         }
     // Load the program
         if (empty($program) || !$program->recstartts)
-            $program =& load_one_program($_GET['starttime'], $_GET['chanid'], $_GET['manualid']);
+            $program = load_one_program($_GET['starttime'], $_GET['chanid'], $_GET['manualid']);
     }
 
 // Get the schedule for this recording, if one exists
-    if ($program->recordid)
-        $schedule =& Schedule::find($program->recordid);
-    elseif ($_GET['recordid'])
-        $schedule =& Schedule::find($_GET['recordid']);
+    if ($program && $program->recordid)
+        $schedule = Schedule::find($program->recordid);
+    elseif (!empty($_GET['recordid']))
+        $schedule = Schedule::find($_GET['recordid']);
     else
         $schedule = new Schedule(NULL);
 
@@ -99,14 +99,15 @@
     }
 
 // Make sure this is a valid program.  If not, forward the user back to the listings page
-    if (!strlen($program->starttime) && !$schedule->recordid) {
-        if ($_GET['recordid']) {
+    if ((!$program || !strlen((string)$program->starttime)) && !$schedule->recordid) {
+        if (!empty($_GET['recordid'])) {
             add_warning(t('Unknown Recording Schedule.'));
             header('Location: '.root_url.'tv/schedules');
         }
         else {
             add_warning(t('Unknown Program.'));
-            header('Location: '.root_url.'tv/list?time='.$_SESSION['list_time']);
+            $list_time = $_SESSION['list_time'] ?? time();
+            header('Location: '.root_url.'tv/list?time='.$list_time);
         }
         save_session_errors();
         exit;
@@ -132,7 +133,7 @@
     }
 
 // Queue a job?
-    if ($program && $program->filename && $_REQUEST['job']) {
+    if ($program && $program->filename && !empty($_REQUEST['job'])) {
         $host = "";
         if (setting("JobsRunOnRecordHost")){
             $host = $program->hostname;
@@ -169,7 +170,7 @@
     if (isset($_POST['save'])) {
         if ($schedule) {
         // Which type of recording is this?  Make sure an illegal one isn't specified
-            switch ($_POST['record']) {
+            switch ($_POST['record'] ?? null) {
                 case rectype_once:        $type = rectype_once;        break;
                 case rectype_daily:       $type = rectype_daily;       break;
                 case rectype_always:      $type = rectype_always;      break;
@@ -209,35 +210,35 @@
         // Modifying an existing schedule, or adding a new one
             else {
             // Set things as the user requested
-                $schedule->profile       = $_POST['profile'];
-                $schedule->recgroup      = $_POST['recgroup'];
-                $schedule->storagegroup  = $_POST['storagegroup'];
-                $schedule->playgroup     = $_POST['playgroup'];
-                $schedule->autoexpire    = $_POST['autoexpire']   ? 1 : 0;
-                $schedule->autocommflag  = $_POST['autocommflag'] ? 1 : 0;
-                $schedule->autouserjob1  = $_POST['autouserjob1'] ? 1 : 0;
-                $schedule->autouserjob2  = $_POST['autouserjob2'] ? 1 : 0;
-                $schedule->autouserjob3  = $_POST['autouserjob3'] ? 1 : 0;
-                $schedule->autouserjob4  = $_POST['autouserjob4'] ? 1 : 0;
-                $schedule->autometadata  = $_POST['autometadata'] ? 1 : 0;
-                $schedule->maxnewest     = $_POST['maxnewest']    ? 1 : 0;
-                $schedule->inactive      = $_POST['inactive']     ? 1 : 0;
-                $schedule->dupin         = _or($_POST['dupin'] + $_POST['dupin2'], dupsin_all);
-                $schedule->dupmethod     = _or($_POST['dupmethod'], 6);
-                $schedule->recpriority   = intval($_POST['recpriority']);
-                $schedule->maxepisodes   = intval($_POST['maxepisodes']);
-                $schedule->startoffset   = intval($_POST['startoffset']);
-                $schedule->endoffset     = intval($_POST['endoffset']);
-                $schedule->autotranscode = $_POST['autotranscode'] ? 1 : 0;
-                $schedule->transcoder    = $_POST['transcoder'];
-                $schedule->prefinput     = $_POST['prefinput'];
-                $schedule->inetref       = $_POST['inetref'];
-                $schedule->season        = intval($_POST['season']);
-                $schedule->episode       = intval($_POST['episode']);
+                $schedule->profile       = $_POST['profile'] ?? null;
+                $schedule->recgroup      = $_POST['recgroup'] ?? null;
+                $schedule->storagegroup  = $_POST['storagegroup'] ?? null;
+                $schedule->playgroup     = $_POST['playgroup'] ?? null;
+                $schedule->autoexpire    = !empty($_POST['autoexpire'])   ? 1 : 0;
+                $schedule->autocommflag  = !empty($_POST['autocommflag']) ? 1 : 0;
+                $schedule->autouserjob1  = !empty($_POST['autouserjob1']) ? 1 : 0;
+                $schedule->autouserjob2  = !empty($_POST['autouserjob2']) ? 1 : 0;
+                $schedule->autouserjob3  = !empty($_POST['autouserjob3']) ? 1 : 0;
+                $schedule->autouserjob4  = !empty($_POST['autouserjob4']) ? 1 : 0;
+                $schedule->autometadata  = !empty($_POST['autometadata']) ? 1 : 0;
+                $schedule->maxnewest     = !empty($_POST['maxnewest'])    ? 1 : 0;
+                $schedule->inactive      = !empty($_POST['inactive'])     ? 1 : 0;
+                $schedule->dupin         = _or(intval($_POST['dupin'] ?? 0) + intval($_POST['dupin2'] ?? 0), dupsin_all);
+                $schedule->dupmethod     = _or($_POST['dupmethod'] ?? null, 6);
+                $schedule->recpriority   = intval($_POST['recpriority'] ?? 0);
+                $schedule->maxepisodes   = intval($_POST['maxepisodes'] ?? 0);
+                $schedule->startoffset   = intval($_POST['startoffset'] ?? 0);
+                $schedule->endoffset     = intval($_POST['endoffset'] ?? 0);
+                $schedule->autotranscode = !empty($_POST['autotranscode']) ? 1 : 0;
+                $schedule->transcoder    = $_POST['transcoder'] ?? null;
+                $schedule->prefinput     = $_POST['prefinput'] ?? null;
+                $schedule->inetref       = $_POST['inetref'] ?? null;
+                $schedule->season        = intval($_POST['season'] ?? 0);
+                $schedule->episode       = intval($_POST['episode'] ?? 0);
                 $schedule->filter        = generateFilter();
 
             // Keep track of the parent recording for overrides
-                if ($_POST['record'] == rectype_override) {
+                if (($_POST['record'] ?? null) == rectype_override) {
                     $schedule->parentid = $schedule->recordid;
                 }
             // Search schedules saved here will create a new standard schedule,
@@ -255,7 +256,7 @@
             redirect_browser(root.'tv/detail?recordid='.$schedule->recordid);
         redirect_browser(root_url.'tv/detail/'.$program->chanid.'/'.$program->starttime);
     }
-    elseif ($_REQUEST['forget_old']) {
+    elseif (!empty($_REQUEST['forget_old'])) {
         $program->rec_forget_old();
     // Redirect back to the page again, but without the query string, so reloads are cleaner
         redirect_browser(root_url.'tv/detail/'.$program->chanid.'/'.$program->starttime);
@@ -273,9 +274,9 @@
 
 // Load the channel
     if ($program)
-        $channel =& $program->channel;
+        $channel = $program->channel;
     else
-        $channel =& Channel::find($schedule->chanid);
+        $channel = Channel::find($schedule->chanid);
 
 // Parse the list of scheduled recordings for possible conflicts
     $conflicting_shows = array();
@@ -283,21 +284,21 @@
     // Now the shows in this channel
         foreach ($shows as $starttime => &$show_group) {
         // Clearly not a match
-            if ($starttime > $program->endtime)
+            if ($program && $starttime > $program->endtime)
                 continue;
         // Parse each show group
             foreach ($show_group as $key => &$show) {
             // Ignore this show
-                if ($show->chanid == $program->chanid && $show->starttime == $program->starttime)
+                if ($program && $show->chanid == $program->chanid && $show->starttime == $program->starttime)
                     continue;
             // Make sure this is a valid show (ie. skip in-progress recordings and other junk)
                 if (!$callsign || $show->length < 1)
                     continue;
             // Not a conflict
-                if ($show->endtime < $program->starttime)
+                if ($program && $show->endtime < $program->starttime)
                     continue;
             // Assign a reference to this show to the various arrays
-                $conflicting_shows[] =& $show;
+                $conflicting_shows[] = $show;
             }
         }
     }
@@ -317,8 +318,8 @@
     }
 
 // Setup some vars for the ipod template
-    $Page_Previous_Location = root_url.'tv/list_shows_in_title_and_group?group='.urlencode($program->recgroup).'&title='.urlencode($program->title);
-    $Page_Previous_Location_Name = $program->title;
+    $Page_Previous_Location = root_url.'tv/list_shows_in_title_and_group?group='.urlencode($program->recgroup ?? '').'&title='.urlencode($program->title ?? '');
+    $Page_Previous_Location_Name = $program->title ?? '';
     $Page_Title_Short = 'Details';
 
 // Display the page

@@ -55,40 +55,40 @@
     <td class="x-timeopts"><p style="margin-top: 0">
         <p>
         <input type="checkbox" name="hd" id="hd" value="1"<?php
-            if ($_SESSION['search']['hd']) echo ' CHECKED' ?>>
+            if (!empty($_SESSION['search']['hd'])) echo ' CHECKED' ?>>
         <label for="hd"><?php echo t('Only match HD programs') ?></label>
         <br>
         <input type="checkbox" name="commfree" id="commfree" value="1"<?php
-            if ($_SESSION['search']['commfree']) echo ' CHECKED' ?>>
+            if (!empty($_SESSION['search']['commfree'])) echo ' CHECKED' ?>>
         <label for="commfree"><?php echo t('Only match commercial-free channels') ?></label>
         <br>
         <input type="checkbox" name="unwatched" id="unwatched" value="1"<?php
-            if ($_SESSION['search']['unwatched']) echo ' CHECKED' ?>>
+            if (!empty($_SESSION['search']['unwatched'])) echo ' CHECKED' ?>>
         <label for="unwatched"><?php echo t('Only match non-recorded shows') ?></label>
         <br>
         <input type="checkbox" name="scheduled" id="scheduled" value="1"<?php
-            if ($_SESSION['search']['scheduled']) echo ' CHECKED' ?>>
+            if (!empty($_SESSION['search']['scheduled'])) echo ' CHECKED' ?>>
         <label for="scheduled"><?php echo t('Ignore scheduled shows') ?></label>
         <br>
         <input type="checkbox" name="generic" id="generic" value="1"<?php
-            if ($_SESSION['search']['generic']) echo ' CHECKED' ?>>
+            if (!empty($_SESSION['search']['generic'])) echo ' CHECKED' ?>>
         <label for="generic"><?php echo t('Ignore generic shows') ?></label>
         <br>
         <input type="checkbox" name="distinctTitle" id="distinctTitle" value="1"<?php
-            if ($_SESSION['search']['distinctTitle']) echo ' CHECKED' ?>>
+            if (!empty($_SESSION['search']['distinctTitle'])) echo ' CHECKED' ?>>
         <label for="distinctTitle"><?php echo t('Only show distinct shows') ?></label>
         </p>
         <p>
         <?php echo t('Showings between'); ?>:<br>
-        <input type="text" size="12" name="starttime" style="text-align: center" value="<?php echo html_entities($_SESSION['search']['starttime']) ?>">
+        <input type="text" size="12" name="starttime" style="text-align: center" value="<?php echo html_entities($_SESSION['search']['starttime'] ?? '') ?>">
         <?php echo t('and'); ?>
-        <input type="text" size="12" name="endtime"   style="text-align: center" value="<?php echo html_entities($_SESSION['search']['endtime']) ?>">
+        <input type="text" size="12" name="endtime"   style="text-align: center" value="<?php echo html_entities($_SESSION['search']['endtime'] ?? '') ?>">
         </p>
         <p>
         <?php echo t('Originally aired between'); ?>:<br>
-        <input type="text" size="12" name="airdate_start" style="text-align: center" value="<?php echo html_entities($_SESSION['search']['airdate_start']) ?>">
+        <input type="text" size="12" name="airdate_start" style="text-align: center" value="<?php echo html_entities($_SESSION['search']['airdate_start'] ?? '') ?>">
         <?php echo t('and'); ?>
-        <input type="text" size="12" name="airdate_end" style="text-align: center" value="<?php echo html_entities($_SESSION['search']['airdate_end']) ?>">
+        <input type="text" size="12" name="airdate_end" style="text-align: center" value="<?php echo html_entities($_SESSION['search']['airdate_end'] ?? '') ?>">
         </p>
         </td>
         <td class="x-progtype">
@@ -108,12 +108,12 @@
 <?php
 
 // Print the results list if a search was performed
-    if ($_REQUEST['search']) {
+    if (!empty($_REQUEST['search'])) {
     // Print the search name
         echo '<p id="x_search_name">',
-             ($_SESSION['search']['type'] == 'a'
+             (($_SESSION['search']['type'] ?? '') == 'a'
                 ? t('Advanced Search')
-                : t('Search for:  $1', $_SESSION['search']['s'])
+                : t('Search for:  $1', $_SESSION['search']['s'] ?? '')
              ),
              '</p>';
     // Search, but nothing found - notify the user
@@ -122,7 +122,7 @@
             return;
         }
     // Setup for grouping by various sort orders
-        $group_field = $_SESSION['search_sortby'][0]['field'];
+        $group_field = $_SESSION['search_sortby'][0]['field'] ?? '';
         if ($group_field == '')
             $group_field = 'airdate';
         elseif ($group_field != 'channum' && $group_field != 'airdate')
@@ -151,7 +151,7 @@
         // Print a dividing row if grouping changes
             switch ($group_field) {
                 case 'airdate':
-                    $cur_group = strftime($_SESSION['date_listing_jump'], $show->starttime);
+                    $cur_group = date("D M j Y", (int) $show->starttime);
                     break;
                 case 'channum':
                     $cur_group = $show->channel->name;
@@ -196,12 +196,12 @@
     <td class="x-channum"><?php     echo $show->channel->channum.' - '.$show->channel->name ?></td>
     <td class="x-airdate"><?php
             echo '<a href="'.root_url.'tv/detail/'.$show->chanid.'/'.$show->starttime.'">'.
-                strftime($_SESSION['date_search'], $show->starttime) . '</a>';
+                date("m/d H:i", (int) $show->starttime) . '</a>';
             if ($show->extra_showings)
                 foreach ($show->extra_showings as $pair) {
                     list($chanid, $showtime) = $pair;
                     echo '<br><a href="', root_url, 'tv/detail/', $chanid, '/', $showtime, '" class="italic">',
-                         strftime($_SESSION['date_search'] ,$showtime);
+                         date("m/d H:i", (int) $showtime);
                     if ($chanid != $show->chanid)
                         echo ' (', Channel::find($chanid)->callsign, ')';
                     echo '</a>';

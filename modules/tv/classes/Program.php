@@ -12,6 +12,7 @@
 /**
  * Program class
  **/
+#[\AllowDynamicProperties]
 class Program extends MythBase {
 
 // The following fields are (in order) the fields returned from the backend on
@@ -151,42 +152,42 @@ class Program extends MythBase {
         // Can be deleted?
             $this->can_delete     = (!$this->is_recording && !$this->is_playing) || $this->recgroup != 'LiveTV';
         // Add a generic "will record" variable, too
-            $this->will_record = ($this->rectype && $this->rectype != rectype_dontrec) ? true : false;
+            $this->will_record = ($this->rectype && defined('rectype_dontrec') && $this->rectype != rectype_dontrec) ? true : false;
         }
     // SQL data
         else {
-            if (in_array($data['airdate'], array('0000-00-00', '0000', '1900-01-01')))
-                $this->airdate              = $data['originalairdate'];
+            if (isset($data['airdate']) && in_array($data['airdate'], array('0000-00-00', '0000', '1900-01-01')))
+                $this->airdate              = isset($data['originalairdate']) ? $data['originalairdate'] : null;
             else
-                $this->airdate              = $data['airdate'];
-            $this->category                 = _or($data['category'],        t('Unknown'));
-            $this->category_type            = _or($data['category_type'],   t('Unknown'));
-            $this->chanid                   = $data['chanid'];
-            $this->description              = $data['description'];
-            $this->endtime                  = $data['endtime_unix'];
-            $this->previouslyshown          = $data['previouslyshown'];
-            $this->programid                = $data['programid'];
-            $this->rater                    = $data['rater'];
-            $this->rating                   = $data['rating'];
-            $this->seriesid                 = $data['seriesid'];
-            $this->showtype                 = $data['showtype'];
-            $this->stars                    = $data['stars'];
-            $this->starttime                = $data['starttime_unix'];
-            $this->subtitle                 = $data['subtitle'];
-            $this->subtitled                = $data['subtitled'];
-            $this->title                    = $data['title'];
-            $this->partnumber               = $data['partnumber'];
-            $this->parttotal                = $data['parttotal'];
-            $this->colorcode                = $data['colorcode'];
-            $this->syndicatedepisodenumber  = $data['syndicatedepisodenumber'];
-            $this->title_pronounce          = $data['title_pronounce'];
-            $this->recstatus                = $data['recstatus'];
-            $this->recordedid               = $data['recordedid'];
+                $this->airdate              = isset($data['airdate']) ? $data['airdate'] : null;
+            $this->category                 = _or(isset($data['category']) ? $data['category'] : null,        t('Unknown'));
+            $this->category_type            = _or(isset($data['category_type']) ? $data['category_type'] : null,   t('Unknown'));
+            $this->chanid                   = isset($data['chanid']) ? $data['chanid'] : null;
+            $this->description              = isset($data['description']) ? $data['description'] : null;
+            $this->endtime                  = isset($data['endtime_unix']) ? $data['endtime_unix'] : null;
+            $this->previouslyshown          = isset($data['previouslyshown']) ? $data['previouslyshown'] : null;
+            $this->programid                = isset($data['programid']) ? $data['programid'] : null;
+            $this->rater                    = isset($data['rater']) ? $data['rater'] : null;
+            $this->rating                   = isset($data['rating']) ? $data['rating'] : null;
+            $this->seriesid                 = isset($data['seriesid']) ? $data['seriesid'] : null;
+            $this->showtype                 = isset($data['showtype']) ? $data['showtype'] : null;
+            $this->stars                    = isset($data['stars']) ? $data['stars'] : null;
+            $this->starttime                = isset($data['starttime_unix']) ? $data['starttime_unix'] : null;
+            $this->subtitle                 = isset($data['subtitle']) ? $data['subtitle'] : null;
+            $this->subtitled                = isset($data['subtitled']) ? $data['subtitled'] : null;
+            $this->title                    = isset($data['title']) ? $data['title'] : null;
+            $this->partnumber               = isset($data['partnumber']) ? $data['partnumber'] : null;
+            $this->parttotal                = isset($data['parttotal']) ? $data['parttotal'] : null;
+            $this->colorcode                = isset($data['colorcode']) ? $data['colorcode'] : null;
+            $this->syndicatedepisodenumber  = isset($data['syndicatedepisodenumber']) ? $data['syndicatedepisodenumber'] : null;
+            $this->title_pronounce          = isset($data['title_pronounce']) ? $data['title_pronounce'] : null;
+            $this->recstatus                = isset($data['recstatus']) ? $data['recstatus'] : null;
+            $this->recordedid               = isset($data['recordedid']) ? $data['recordedid'] : null;
 
         // These db fields should really get renamed...
-            $this->audioproperties          = $data['stereo'];
-            $this->videoproperties          = $data['hdtv'];
-            $this->subtitletype             = $data['closecaptioned'];
+            $this->audioproperties          = isset($data['stereo']) ? $data['stereo'] : 0;
+            $this->videoproperties          = isset($data['hdtv']) ? $data['hdtv'] : 0;
+            $this->subtitletype             = isset($data['closecaptioned']) ? $data['closecaptioned'] : 0;
         }
     // Assign shortcut names to the new audio/video/subtitle property flags
         $this->stereo                       = $this->audioproperties & 0x01;
@@ -209,8 +210,10 @@ class Program extends MythBase {
         $this->deaf_signed                  = $this->subtitletype    & 0x08;
     // Generate the star string, since mysql has issues with REPEAT() and
     // decimals, and the backend doesn't do it for us, anyway.
-        $this->starstring = @str_repeat(star_character, intVal($this->stars * max_stars));
-        $frac = ($this->stars * max_stars) - intVal($this->stars * max_stars);
+        $max_stars_val = defined('max_stars') ? max_stars : 1;
+        $star_char_val = defined('star_character') ? star_character : '*';
+        $this->starstring = @str_repeat($star_char_val, (int)($this->stars * $max_stars_val));
+        $frac = ($this->stars * $max_stars_val) - (int)($this->stars * $max_stars_val);
         if ($frac >= .75)
             $this->starstring .= '&frac34;';
         elseif ($frac >= .5)
@@ -231,7 +234,7 @@ class Program extends MythBase {
                                               $this->recordedid);
 	}
     // Turn recstatus into a word
-        if (isset($this->recstatus) && $GLOBALS['RecStatus_Types'][$this->recstatus]) {
+        if (isset($this->recstatus) && isset($GLOBALS['RecStatus_Types'][$this->recstatus])) {
             $this->recstatus_orig   = $this->recstatus;
             $this->recstatus        = $GLOBALS['RecStatus_Types'][$this->recstatus];
             $this->conflicting      = ($this->recstatus == 'Conflict');   # conflicts with another scheduled recording?
@@ -242,16 +245,16 @@ class Program extends MythBase {
             $this->airdate = NULL;
     // Do we have a chanid?  Load some info about it
         if ($this->chanid && !isset($this->channel))
-            $this->channel =& Channel::find($this->chanid);
+            $this->channel = Channel::find($this->chanid);
 
     // Calculate the duration
         if ($this->recendts)
             $this->length = $this->recendts - $this->recstartts;
         else
-            $this->length = $this->endtime  - $this->starttime;
+            $this->length = (int)$this->endtime - (int)$this->starttime;
 
     // A special recstatus for shows that this was manually set to record
-        if ($this->rectype == rectype_override)
+        if (defined('rectype_override') && $this->rectype == rectype_override)
             $this->recstatus = 'ForceRecord';
 
     // Find out which css category this program falls into
@@ -346,7 +349,7 @@ class Program extends MythBase {
                          $this->chanid);
         $this->jobs      = array();
         while ($row = $sh->fetch_assoc()) {
-            if ($row['status'] & JOB_DONE)
+            if (defined('JOB_DONE') && ($row['status'] & JOB_DONE))
                 $this->jobs['done'][] = $row;
             else {
                 $this->jobs['queue'][] = $row;
@@ -448,13 +451,14 @@ class Program extends MythBase {
  **/
     public function thumb_url($width=160, $height=120, $secs_in=-1) {
 
-        $filename = explode('/', $this->filename);
+        $filename = explode('/', (string)$this->filename);
         $filename = array_pop($filename);
 
         if ($height == 0)
             $height = floor($width / $this->getAspect());
 
-        return root_url."tv/get_pixmap/{$this->hostname}/{$this->chanid}/{$this->recstartts}/$width/$height/$secs_in/$filename.{$width}x{$height}x$secs_in.png";
+        $root_url_val = defined('root_url') ? root_url : '';
+        return "{$root_url_val}tv/get_pixmap/{$this->hostname}/{$this->chanid}/{$this->recstartts}/$width/$height/$secs_in/$filename.{$width}x{$height}x$secs_in.png";
     }
 
 /**
@@ -474,17 +478,19 @@ class Program extends MythBase {
  * The "details list" for each program.
  **/
     public function details_list() {
-    // Start the list, and print the show airtime and title
-        $str = "<dl class=\"details_list\">\n"
+	// Start the list, and print the show airtime and title
+    $time_fmt = $_SESSION['time_format2'] ?? 'H:i';
+    $str = "<dl class=\"details_list\">\n"
             // Airtime
               ."\t<dt>".t('Airtime').":</dt>\n"
               ."\t<dd>".t('$1 to $2',
-                          strftime($_SESSION['time_format'], $this->starttime),
-                          strftime($_SESSION['time_format'], $this->endtime))
+                            date($time_fmt, (int)$this->starttime),
+                            date($time_fmt, (int)$this->endtime)
+                        )
                        ."</dd>\n"
         // Channel
               ."\t<dt>".t('Channel').":</dt>\n"
-              ."\t<dd>".($_SESSION["prefer_channum"] ? $this->channel->channum : $this->channel->callsign)
+              ."\t<dd>".(!empty($_SESSION["prefer_channum"]) ? $this->channel->channum : $this->channel->callsign)
                        .' - '.$this->channel->name
                        ."</dd>\n"
             // Title
@@ -492,13 +498,13 @@ class Program extends MythBase {
               ."\t<dd>".html_entities($this->title)
                        ."</dd>\n";
     // Subtitle
-        if (preg_match('/\\S/', $this->subtitle)) {
+        if (preg_match('/\\S/', (string)$this->subtitle)) {
             $str .= "\t<dt>".t('Subtitle').":</dt>\n"
                    ."\t<dd>".html_entities($this->subtitle)
                             ."</dd>\n";
         }
     // Description
-        if (preg_match('/\\S/', $this->fancy_description)) {
+        if (preg_match('/\\S/', (string)$this->fancy_description)) {
             $str .= "\t<dt>".t('Description').":</dt>\n"
                    ."\t<dd>".nl2br(html_entities($this->fancy_description))
                             ."</dd>\n";
@@ -516,7 +522,7 @@ class Program extends MythBase {
                             ."</dd>\n";
         }
     // Category
-        if (preg_match('/\\S/', $this->category)) {
+        if (preg_match('/\\S/', (string)$this->category)) {
             $str .= "\t<dt>".t('Category').":</dt>\n"
                    ."\t<dd>".html_entities($this->category)
                             ."</dd>\n";
@@ -526,13 +532,13 @@ class Program extends MythBase {
             $str .= "\t<dt>".t('Schedule').":</dt>\n"
                    ."\t<dd>";
             switch ($this->rectype) {
-                case rectype_once:       $str .= t('rectype-long: once');       break;
-                case rectype_daily:      $str .= t('rectype-long: daily');      break;
-                case rectype_always:     $str .= t('rectype-long: always');     break;
-                case rectype_weekly:     $str .= t('rectype-long: weekly');     break;
-                case rectype_findone:    $str .= t('rectype-long: findone');    break;
-                case rectype_override:   $str .= t('rectype-long: override');   break;
-                case rectype_dontrec:    $str .= t('rectype-long: dontrec');    break;
+                case defined('rectype_once') ? rectype_once : 1:       $str .= t('rectype-long: once');       break;
+                case defined('rectype_daily') ? rectype_daily : 2:      $str .= t('rectype-long: daily');      break;
+                case defined('rectype_always') ? rectype_always : 4:     $str .= t('rectype-long: always');     break;
+                case defined('rectype_weekly') ? rectype_weekly : 5:     $str .= t('rectype-long: weekly');     break;
+                case defined('rectype_findone') ? rectype_findone : 6:    $str .= t('rectype-long: findone');    break;
+                case defined('rectype_override') ? rectype_override : 7:   $str .= t('rectype-long: override');   break;
+                case defined('rectype_dontrec') ? rectype_dontrec : 8:    $str .= t('rectype-long: dontrec');    break;
                 default:                 $str .= t('Unknown');
             }
             $str .= "</dd>\n";
@@ -543,7 +549,7 @@ class Program extends MythBase {
         elseif ($this->recpriority2 != null)
             $str .= "\t<dt>".t('Recording Priority')."</dt><dd>".$this->recpriority2."</dd>\n";
     // Recording status
-        if (!empty($this->recstatus)) {
+        if (!empty($this->recstatus) && isset($GLOBALS['RecStatus_Reasons'][$this->recstatus])) {
             $str .= "\t<dt>".t('Notes').":</dt>\n"
                    ."\t<dd>".$GLOBALS['RecStatus_Reasons'][$this->recstatus]
                             ."</dd>\n";
@@ -588,8 +594,10 @@ class Program extends MythBase {
             while ($name = $result->fetch_col()) {
                 if (!$add_search_links)
                     $people[] = $name;
-                else
-                    $people[] = '<a href="'.root_url.'tv/search/'.str_replace('%2F', '/', rawurlencode('^'.$name.'$')).'?field=people">'.$name.'</a>';
+                else {
+                    $root_url_val = defined('root_url') ? root_url : '';
+                    $people[] = '<a href="'.$root_url_val.'tv/search/'.str_replace('%2F', '/', rawurlencode('^'.$name.'$')).'?field=people">'.$name.'</a>';
+                }
             }
         // Cache it
             $this->credits[$role][$add_search_links] = trim(implode(', ', $people));
@@ -657,7 +665,7 @@ class Program extends MythBase {
                                 .'11'                                     .','
                                 .'1'                                      .','
                                 .'0'                                      .')')
-            or trigger_error('SQL Error: '.$db->error, FATAL);
+            or trigger_error('SQL Error: '.(isset($db->error) ? $db->error : ''), E_USER_ERROR);
         $sh->finish();
     // Notify the backend of the changes
         MythBackend::find()->rescheduleRecording();
@@ -667,8 +675,8 @@ class Program extends MythBase {
  * Revert a show to its default recording schedule settings
  **/
     public function rec_default() {
-        $schedule =& Schedule::find($this->recordid);
-        if ($schedule && ($schedule->type == rectype_override || $schedule->type == rectype_dontrec))
+        $schedule = Schedule::find($this->recordid);
+        if ($schedule && defined('rectype_override') && defined('rectype_dontrec') && ($schedule->type == rectype_override || $schedule->type == rectype_dontrec))
             $schedule->delete();
     }
 
@@ -677,7 +685,7 @@ class Program extends MythBase {
  * rectype_dontrec or rectype_override constants
  **/
     public function rec_override($rectype) {
-        $schedule =& Schedule::find($this->recordid);
+        $schedule = Schedule::find($this->recordid);
     // Unknown schedule?
         if (!$schedule) {
             add_error('Unknown schedule for this program\'s recordid:  '.$this->recordid);
@@ -713,7 +721,8 @@ class Program extends MythBase {
                     unix2mythtime($this->starttime),
                     $this->chanid
                   );
-        $this->rec_override(rectype_override);
+        if (defined('rectype_override'))
+            $this->rec_override(rectype_override);
     }
 
 /**
@@ -758,7 +767,7 @@ class Program extends MythBase {
     public function stopRecording() {
         if ($this->recstatus != 'Recording')
             return false;
-        MythBackend::find()->sendCommand(array('STOP_RECORDING', $prog->backend_row(), '0'));
+        MythBackend::find()->sendCommand(array('STOP_RECORDING', $this->backend_row(), '0'));
         return true;
     }
 
@@ -777,7 +786,7 @@ class Program extends MythBase {
     }
 
     public function hasAlternativeFormat($format = 'mp4') {
-        $path = preg_replace('/\.[a-z0-9]+$/i', '.'.$format, $this->findDiskPath());
+        $path = preg_replace('/\.[a-z0-9]+$/i', '.'.$format, (string)$this->findDiskPath());
         return file_exists($path);
     }
 
@@ -791,10 +800,10 @@ class Program extends MythBase {
         $row = $sh->fetch_assoc();
         $sh->finish();
 
-        if (($row['aspect'] > 1.777777) && ($row['aspect'] < 1.777779)) {
+        if (isset($row['aspect']) && ($row['aspect'] > 1.777777) && ($row['aspect'] < 1.777779)) {
             // avoid low precision 16:9 to avoid 320x179 thumbnails
             return 16/9;
-        } elseif ($row['aspect'] > 1) {
+        } elseif (isset($row['aspect']) && $row['aspect'] > 1) {
             return $row['aspect'];
         } else {
             // default 4:3

@@ -27,63 +27,78 @@
 /**
  * Abstract superclass for all database query types.
  **/
-class Database_Query {
+abstract class Database_Query {
 
-/** @var resource   The related database connection handle */
-     var $dbh = NULL;
+    /** The related database connection handle */
+    public ?\mysqli $dbh = null;
 
-/** @var resource   The current active statement handle */
-     var $sh = NULL;
+    /** The parent database object */
+    public ?Database $db = null;
 
-/** @var array      The query string, (depending on the engine, broken apart where arguments should be inserted) */
-     var $query = array();
+    /** The current active statement handle or query result */
+    public \mysqli_stmt|\mysqli_result|bool|null $sh = null;
 
-/** @var string     The most recent query sent to the server */
-     var $last_query = '';
+    /**
+     * The query string, (depending on the engine, broken apart where arguments should be inserted)
+     *
+     * @var string[]
+     */
+    public array $query = [];
 
-/** @var array      An array of warnings that this query generated */
-     var $warnings = array();
+    /** The most recent query sent to the server */
+    public string $last_query = '';
 
-/** @var int        Number of arguments required by $query */
-     var $num_args_needed = 0;
+    /** An array of warnings that this query generated */
+    public array $warnings = [];
 
-/** @var int        Cache of xxx_num_rows() so multiple queries don't trip over each other */
-     var $num_rows;
+    /** Number of arguments required by $query */
+    public int $num_args_needed = 0;
 
-/** @var int        Cache of xxx_affected_rows() so multiple queries don't trip over each other */
-     var $affected_rows;
+    /** Cache of xxx_num_rows() so multiple queries don't trip over each other */
+    public ?int $num_rows = null;
 
-/** @var int        Cache of xxx_insert_id() so multiple queries don't trip over each other */
-     var $insert_id;
+    /** Cache of xxx_affected_rows() so multiple queries don't trip over each other */
+    public ?int $affected_rows = null;
 
-/**
- * Constructor.  Parses $query and splits it at ? characters for later
- * substitution in execute().  This should be overridden by engines like mysqli
- * that have their own variable insertion handlers.
- *
- * @param Database $dbh    The parent Database object
- * @param string   $query  The query string
- **/
-    function __construct(&$db, $query) {
-        $this->dbh             =  $db->dbh;
-        $this->db              =& $db;
-        $this->num_args_needed =  max(0, substr_count($query, '?') - substr_count($query, '\\?'));
-    // Build an optimized version of the query
+    /** Cache of xxx_insert_id() so multiple queries don't trip over each other */
+    public int|string|null $insert_id = null;
+
+    /**
+     * Constructor.  Parses $query and splits it at ? characters for later
+     * substitution in execute().  This should be overridden by engines like mysqli
+     * that have their own variable insertion handlers.
+     *
+     * @param Database $db     The parent Database object
+     * @param string   $query  The query string
+     **/
+    public function __construct(Database $db, string $query) {
+        $this->dbh             = $db->dbh;
+        $this->db              = $db;
+        $this->num_args_needed = max(0, substr_count($query, '?') - substr_count($query, '\\?'));
+
+        // Build an optimized version of the query
         if ($this->num_args_needed > 0) {
-            $this->query = array();
-            foreach (preg_split('/(\\\\?\\?)/', $query, -1, PREG_SPLIT_DELIM_CAPTURE) as $part) {
-                switch ($part) {
-                    case '?':
-                        break;
-                    case '\\?':
-                        $this->query[min(0, count($this->query) - 1)] .= '?';
-                        break;
-                    default:
-                        $this->query[] = $part;
+            $this->query = [];
+            $parts = preg_split('/(\\\\?\\?)/', $query, -1, PREG_SPLIT_DELIM_CAPTURE);
+            if (is_array($parts)) {
+                foreach ($parts as $part) {
+                    switch ($part) {
+                        case '?':
+                            break;
+                        case '\\?':
+                            $lastKey = max(0, count($this->query) - 1);
+                            if (!isset($this->query[$lastKey])) {
+                                $this->query[$lastKey] = '';
+                            }
+                            $this->query[$lastKey] .= '?';
+                            break;
+                        default:
+                            $this->query[] = $part;
+                    }
                 }
             }
+        } else {
+            $this->query = [$query];
         }
-        else
-            $this->query = array($query);
     }
 }

@@ -38,7 +38,7 @@
 <!--
 
 // Keep track of the autoexpire flag
-    var autoexpire = <?php echo $program->auto_expire ? 1 : 0 ?>;
+    var autoexpire = <?php echo ($program && $program->auto_expire) ? 1 : 0 ?>;
 
 // Set the autoexpire flag
     function set_autoexpire() {
@@ -70,13 +70,13 @@
         if (confirm("<?php echo str_replace('"', '\\"',
                                             t('Are you sure you want to delete the following show?')
                                             .'\n\n     '
-                                            .$program->title
-                                            .($program->subtitle
+                                            .($program->title ?? '')
+                                            .(($program && $program->subtitle)
                                               ? ': '.$program->subtitle
                                               : '')) ?>")) {
             location.href = '<?php echo root_url ?>tv/recorded?delete=yes&chanid=<?php
-                            echo $program->chanid
-                            ?>&starttime=<?php echo $program->recstartts ?>'
+                            echo $program->chanid ?? ''
+                            ?>&starttime=<?php echo $program->recstartts ?? '' ?>'
                             +(forget_old
                                 ? '&forget_old=yes'
                                 : '');
@@ -84,7 +84,7 @@
     }
 
     function openFlashPlayerInNewWindow() {
-        player = window.open('', 'Flash Player', 'toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=0,width=<?php echo $flv_w; ?>,height=<?php echo $flv_h; ?>,left=20,top=20');
+        player = window.open('', 'Flash Player', 'toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=0,width=<?php echo $flv_w ?? 0; ?>,height=<?php echo $flv_h ?? 0; ?>,left=20,top=20');
         player.document.write('<html><body style="background-color: black; margin: 0px; padding: 0px;">'+$$('.x-pixmap')[0].textContent+'</body></html>');
     }
 
@@ -206,11 +206,11 @@
                             echo t('Details for: $1',
                                    html_entities($channel->name))
                         ?>">
-<?php       if ($_SESSION["show_channel_icons"] == true && !empty($channel->icon)) { ?>
+<?php       if (isset($_SESSION["show_channel_icons"]) && $_SESSION["show_channel_icons"] == true && !empty($channel->icon)) { ?>
                     <img src="<?php echo $channel->icon ?>">
 <?php       } ?>
                 <br>
-                    <?php echo ($_SESSION["prefer_channum"] ? $channel->callsign : $channel->channum), "\n" ?>
+                    <?php echo (!empty($_SESSION["prefer_channum"]) ? $channel->callsign : $channel->channum), "\n" ?>
                 </a>
             </td>
 <?php   } ?>
@@ -226,10 +226,10 @@
                         echo ':<br>', $schedule->subtitle;
                     ?></a>
                 <div id="x-time"><?php
-                echo strftime('%a, %b %e', $schedule->starttime);
+                echo date('D, M j', $schedule->starttime);
                 echo ', '
-                    .t('$1 to $2', strftime($_SESSION['time_format'], $schedule->starttime),
-                                   strftime($_SESSION['time_format'], $schedule->endtime));
+                    .t('$1 to $2', isset($_SESSION['time_format2']) ? date($_SESSION['time_format2'], $schedule->starttime) : date('H:i', $schedule->starttime),
+                                   isset($_SESSION['time_format2']) ? date($_SESSION['time_format2'], $schedule->endtime) : date('H:i', $schedule->endtime));
                 if ($program)
                     echo ' ('.tn('$1 min', '$1 mins', intval($program->length/60)).')';
                 echo "<br>\n";
@@ -426,7 +426,7 @@
             }
         }
     // Can we perform an accurate duplicate check?
-        $can_dupcheck = preg_match('/\S/', $program->title)
+        $can_dupcheck = $program && preg_match('/\S/', $program->title)
                         && preg_match('/\S/', $program->programid.$program->subtitle.$program->description);
         if (!empty($program->recstatus) || $can_dupcheck) {
         ?><tr id="x-status">
@@ -451,7 +451,7 @@
                     echo '<a onclick="javascript:confirm_delete(false)"',
                          ' title="',html_entities(t('Delete $1',
                                                     $program->title
-                                                    .($show->subtitle
+                                                    .(!empty($show->subtitle)
                                                         ? ': '.$show->subtitle
                                                         : '')
                                                  )).'">',
@@ -459,7 +459,7 @@
                          '<a onclick="javascript:confirm_delete(true)"',
                          ' title="',html_entities(t('Delete and rerecord $1',
                                                     $program->title
-                                                    .($show->subtitle
+                                                    .(!empty($show->subtitle)
                                                         ? ': '.$show->subtitle
                                                         : '')
                                                  )).'">',
@@ -468,26 +468,26 @@
                 ?></td>
         </tr><?php
         }
-        if ($conflicting_shows && count($conflicting_shows)) {
+        if (is_array($conflicting_shows) && count($conflicting_shows)) {
         ?><tr id="x-conflicts">
             <th><?php echo t('Possible conflicts') ?>:<br><br>
         <div style="text-align: left;">
                 <?php echo t('Filters'); ?><br>
-            <form id="change_display" name="change_display" action="<?php echo root_url; ?>tv/detail<?php if ($_GET['recordid'])
+            <form id="change_display" name="change_display" action="<?php echo root_url; ?>tv/detail<?php if (!empty($_GET['recordid']))
                              echo '?recordid='.urlencode($_GET['recordid']);
                       else
-                         echo '/'.urlencode($_GET['chanid']).'/'.urlencode($_GET['starttime']) ?>" method="post">
+                         echo '/'.urlencode($_GET['chanid'] ?? '').'/'.urlencode($_GET['starttime'] ?? '') ?>" method="post">
             <input type="hidden" name="change_display" value="1">
 
-                <label for="CurrentRecording"><input type="checkbox" id="CurrentRecording" name="CurrentRecording" onclick="$('change_display').submit()" <?php if ($_SESSION['recording_details']['show_CurrentRecording']) echo "CHECKED"; ?>> <?php echo t('Current Recording'); ?></label><br>
+                <label for="CurrentRecording"><input type="checkbox" id="CurrentRecording" name="CurrentRecording" onclick="$('change_display').submit()" <?php if (!empty($_SESSION['recording_details']['show_CurrentRecording'])) echo "CHECKED"; ?>> <?php echo t('Current Recording'); ?></label><br>
 
-                <label for="EarlierShowing"><input type="checkbox" id="EarlierShowing" name="EarlierShowing" onclick="$('change_display').submit()" <?php if ($_SESSION['recording_details']['show_EarlierShowing']) echo "CHECKED"; ?>> <?php echo t('Earlier Showing'); ?></label><br>
+                <label for="EarlierShowing"><input type="checkbox" id="EarlierShowing" name="EarlierShowing" onclick="$('change_display').submit()" <?php if (!empty($_SESSION['recording_details']['show_EarlierShowing'])) echo "CHECKED"; ?>> <?php echo t('Earlier Showing'); ?></label><br>
 
-                <label for="PreviousRecording"><input type="checkbox" id="PreviousRecording" name="PreviousRecording" onclick="$('change_display').submit()" <?php if ($_SESSION['recording_details']['show_PreviousRecording']) echo "CHECKED"; ?>> <?php echo t('Previous Recording'); ?></label><br>
+                <label for="PreviousRecording"><input type="checkbox" id="PreviousRecording" name="PreviousRecording" onclick="$('change_display').submit()" <?php if (!empty($_SESSION['recording_details']['show_PreviousRecording'])) echo "CHECKED"; ?>> <?php echo t('Previous Recording'); ?></label><br>
 
-                <label for="WillRecord"><input type="checkbox" id="WillRecord" name="WillRecord" onclick="$('change_display').submit()" <?php if ($_SESSION['recording_details']['show_WillRecord']) echo "CHECKED"; ?>> <?php echo t('Will Record'); ?></label><br>
+                <label for="WillRecord"><input type="checkbox" id="WillRecord" name="WillRecord" onclick="$('change_display').submit()" <?php if (!empty($_SESSION['recording_details']['show_WillRecord'])) echo "CHECKED"; ?>> <?php echo t('Will Record'); ?></label><br>
 
-                <label for="Conflict"><input type="checkbox" id="Conflict" name="Conflict" onclick="$('change_display').submit()" <?php if ($_SESSION['recording_details']['show_Conflict']) echo "CHECKED"; ?>> <?php echo t('Conflicts'); ?></label><br>
+                <label for="Conflict"><input type="checkbox" id="Conflict" name="Conflict" onclick="$('change_display').submit()" <?php if (!empty($_SESSION['recording_details']['show_Conflict'])) echo "CHECKED"; ?>> <?php echo t('Conflicts'); ?></label><br>
                 </div>
         </form>
         </th>
@@ -501,11 +501,11 @@
             // Print the link to edit this scheduled recording
                 echo '<a class="', $show->css_class,
                      '" title="', html_entities(t('$1 to $2',
-                                                  strftime($_SESSION['time_format'], $show->starttime),
-                                                  strftime($_SESSION['time_format'], $show->endtime))
-                                                .', '.($_SESSION["prefer_channum"] ? $show->channel->channum : $show->channel->callsign)
+                                                  isset($_SESSION['time_format2']) ? date($_SESSION['time_format2'], $show->starttime) : date('H:i', $show->starttime),
+                                                  isset($_SESSION['time_format2']) ? date($_SESSION['time_format2'], $show->endtime) : date('H:i', $show->endtime))
+                                                .', '.(!empty($_SESSION["prefer_channum"]) ? $show->channel->channum : $show->channel->callsign)
                                                 .' - '.$show->channel->name).'"';
-                if ($_SESSION["show_popup_info"])
+                if (!empty($_SESSION["show_popup_info"]))
                     echo show_popup("program_$program_id_counter", $show->details_list(), NULL, 'popup');
                 echo ' href="'.root_url.'tv/detail/'.$show->chanid.'/'.$show->starttime.'">'
                     .$show->title
@@ -525,33 +525,33 @@
                 <a href="http://www.tv.com/search.php?type=11&stype=all&qs=<?php echo urlencode($schedule->title) ?>"><?php echo t('Search $1', 'TV.com') ?></a>
                 <a href="http://www.google.com/search?q=<?php echo urlencode($schedule->title) ?>"><?php echo t('Search $1', 'Google') ?></a>
                 <a href="<?php echo root_url ?>tv/search/<?php echo str_replace('%2F', '/', rawurlencode('^'.$schedule->title.'$')) ?>?field=title"><?php
-                    if ($_GET['recordid'])
+                    if (!empty($_GET['recordid']))
                         echo t('Find showings of this program');
                     else
                         echo t('Find other showings of this program');
                 ?></a>
 <?php           }
-                if ($_GET['recordid']) {
+                if (!empty($_GET['recordid'])) {
                     echo '<a href="',  root_url, 'tv/schedules">',
                          t('Back to the recording schedules'),
                          '</a>';
-                    echo '<a href="', root_url, 'tv/list?time=', $_SESSION['list_time'], '">',
+                    echo '<a href="', root_url, 'tv/list?time=', $_SESSION['list_time'] ?? time(), '">',
                          t('Back to the program listing'),
                          '</a>';
                 }
                 else {
-                    if ($program->endtime > time()) {
+                    if ($program && $program->endtime > time()) {
                         echo '<a href="', root_url, 'tv/list?time=', $program->starttime, '">',
                              t('What else is on at this time?'),
                              '</a>';
                     }
-                    if ($program->filename) {
+                    if ($program && $program->filename) {
                         echo '<a href="', root_url, 'tv/recorded">',
                              t('Back to the recorded programs'),
                              '</a>';
                     }
                     else {
-                        echo '<a href="', root_url, 'tv/list?time=', $_SESSION['list_time'], '">',
+                        echo '<a href="', root_url, 'tv/list?time=', $_SESSION['list_time'] ?? time(), '">',
                              t('Back to the program listing'),
                              '</a>';
                     }
@@ -564,13 +564,13 @@
 <?php if (!$program || !$program->filename || ($program->filename && $program->recendts > time())) { ?>
     <div id="schedule">
         <form name="program_detail" method="post" action="<?php echo root_url ?>tv/detail<?php
-            if ($_GET['recordid'])
+            if (!empty($_GET['recordid']))
                 echo '?recordid='.urlencode($_GET['recordid']);
             else
-                echo '/'.urlencode($_GET['chanid']).'/'.urlencode($_GET['starttime'])
+                echo '/'.urlencode($_GET['chanid'] ?? '').'/'.urlencode($_GET['starttime'] ?? '')
             ?>">
 
-<?php   if (!$schedule || $schedule->type != rectype_override && $schedule->type != rectype_dontrec) { ?>
+<?php   if (!$schedule || ($schedule->type != rectype_override && $schedule->type != rectype_dontrec)) { ?>
         <div class="x-options">
             <h3><?php echo t('Schedule Options') ?>:</h3>
 <?php
@@ -830,7 +830,7 @@
             </div>
             <div class="x-jobs">
 <?php
-        if ($program->jobs_possible && count($program->jobs_possible)) {
+        if (!empty($program->jobs_possible) && is_array($program->jobs_possible) && count($program->jobs_possible)) {
             echo t('Queue a job'), ':',
                  '            <ul class="x-queue">';
             foreach ($program->jobs_possible as $id => $job) {
@@ -842,28 +842,28 @@
             }
             echo '            </ul>';
         }
-        if (is_array($program->jobs['queue']) && count($program->jobs['queue'])) {
+        if (isset($program->jobs['queue']) && is_array($program->jobs['queue']) && count($program->jobs['queue'])) {
             echo t('Queued jobs'), ':',
                  '            <ul class="-queued">';
             foreach ($program->jobs['queue'] as $job) {
                 echo '                <li>',
                      $Jobs[$job['type']],
                      ' (', $Job_Status[$job['status']],
-                     ':  ', strftime($_SESSION['date_listing_key'], $job['statustime']),
+                     ':  ', date($_SESSION['date_listing_key2'] ?? 'Y-m-d H:i', $job['statustime']),
                      ')<br>',
                      html_entities($job['comment']),
                      '</li>';
             }
             echo '            </ul>';
         }
-        if (is_array($program->jobs['done']) && count($program->jobs['done'])) {
+        if (isset($program->jobs['done']) && is_array($program->jobs['done']) && count($program->jobs['done'])) {
             echo t('Recently completed jobs'), ':',
                  '            <ul class="-done">';
             foreach ($program->jobs['done'] as $job) {
                 echo '                <li>',
                      $Jobs[$job['type']],
                      ' (', $Job_Status[$job['status']],
-                     ':  ', strftime($_SESSION['date_listing_key'], $job['statustime']),
+                     ':  ', date($_SESSION['date_listing_key2'] ?? 'Y-m-d H:i', $job['statustime']),
                      ')<br>',
                      html_entities($job['comment']),
                      '</li>';

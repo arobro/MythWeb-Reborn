@@ -9,6 +9,7 @@
  *
  **/
 
+#[\AllowDynamicProperties]
 class Channel extends MythBase {
     private static $channel_list = null;
     private static $callsign_list = null;
@@ -43,7 +44,7 @@ class Channel extends MythBase {
 
     public $programs = array();
 
-    public static function getChannelList($filtered=True) {
+    public static function getChannelList($filtered=true) {
         if ($filtered)
             $channel_list = Cache::get('[filtered_channelList]');
         else
@@ -51,7 +52,7 @@ class Channel extends MythBase {
         if (is_null($channel_list)) {
             global $db;
             $sql = 'SELECT MIN(channel.chanid) AS chanid FROM channel';
-            if ($_SESSION['guide_favonly']) {
+            if (!empty($_SESSION['guide_favonly'])) {
                 $sql .= ', channelgroup, channelgroupnames WHERE channel.chanid = channelgroup.chanid AND channelgroup.grpid = channelgroupnames.grpid AND channelgroupnames.name = \'Favorites\'';
                 if ($filtered)
                     $sql .= ' AND channel.visible = 1 AND channel.deleted IS NULL';
@@ -61,7 +62,7 @@ class Channel extends MythBase {
             $sql .= ' GROUP BY channel.channum, channel.callsign';
         // Sort
             $sql .= ' ORDER BY '
-                    .($_SESSION["sortby_channum"] ? '' : 'channel.callsign, ')
+                    .(!empty($_SESSION["sortby_channum"]) ? '' : 'channel.callsign, ')
                     .'(channel.channum + 0), channel.channum';  // sort by channum as both int and string to grab subchannels
         // Query
             $sh = $db->query($sql);
@@ -78,7 +79,7 @@ class Channel extends MythBase {
         if (is_null($callsign_list)) {
             global $db;
             $sql = 'SELECT MIN(channel.chanid) AS chanid, channel.channum, channel.callsign FROM channel';
-            if ($_SESSION['guide_favonly'])
+            if (!empty($_SESSION['guide_favonly']))
                 $sql .= ', channelgroup, channelgroupnames WHERE channel.chanid = channelgroup.chanid AND channelgroup.grpid = channelgroupnames.grpid AND channelgroupnames.name = \'Favorites\' AND';
             else
                 $sql .= ' WHERE';
@@ -86,7 +87,7 @@ class Channel extends MythBase {
             $sql .= ' GROUP BY channel.channum, channel.callsign';
         // Sort
             $sql .= ' ORDER BY '
-                    .($_SESSION["sortby_channum"] ? '' : 'channel.callsign, ')
+                    .(!empty($_SESSION["sortby_channum"]) ? '' : 'channel.callsign, ')
                     .'(channel.channum + 0), channel.channum';  // sort by channum as both int and string to grab subchannels
         // Query
             $sh = $db->query($sql);
@@ -99,7 +100,7 @@ class Channel extends MythBase {
     }
 
     /* public */
-    function __construct($chanid) {
+    public function __construct($chanid) {
     // Are we loading up an invalid channel?
         if ($chanid == -1)
             return;
@@ -135,7 +136,7 @@ class Channel extends MythBase {
 /** @deprecated FIXME:  this routine should get split out on its own, accepting
  *                      $channel as a parameter, and put into modules/tv/list.php
  */
-    function display_programs($start_time, $end_time) {
+    public function display_programs($start_time, $end_time) {
         global $Page;
     // Keep track of each program this routine handles (for unique id generation)
         static $program_id_counter;
@@ -147,55 +148,57 @@ class Channel extends MythBase {
             $timeslots_left = theme_num_time_slots;
             $timeslot_size = theme_timeslot_size;
         } else {
-            $timeslots_left = num_time_slots;
-            $timeslot_size = timeslot_size;
+            $timeslots_left = defined('num_time_slots') ? num_time_slots : 0;
+            $timeslot_size = defined('timeslot_size') ? timeslot_size : 1;
         }
 
-        $programs = &load_all_program_data($start_time, $end_time, $this->chanid);
-        foreach ($programs as &$program) {
-        // Leave early?  just in case
-            if ($timeslots_left < 1)
-                break;
-        // Make sure this program happens within the specified timeslot
-            if ($program->starttime >= $end_time || $program->endtime <= $start_time)
-                continue;
-        // Get a modified start/end time for this program (in case it starts/ends outside of the aloted time
-            $program_starts = $program->starttime;
-            $program_ends   = $program->endtime;
-            if ($program->starttime < $start_time)
-                $program_starts = $start_time;
-            if ($program->endtime > $end_time)
-                $program_ends = $end_time;
-        // If there is a gap before the current program, put a NO DATA block in.
-            if ($program_starts > $start_time) {
-                $length = (($program_starts - $start_time) / $timeslot_size);
-                if ($length >= 0.5) {
-                    $timeslots_used = ceil($length);
-                    require tmpl_dir.'list_cell_nodata.php';
-                    $start_time += $timeslots_used * timeslot_size;
-                    if ($timeslots_left < $timeslots_used)
-                        $timeslots_used = $timeslots_left;
-                    $timeslots_left -= $timeslots_used;
+        $programs = load_all_program_data($start_time, $end_time, $this->chanid);
+        if (is_array($programs) || is_object($programs)) {
+            foreach ($programs as &$program) {
+            // Leave early?  just in case
+                if ($timeslots_left < 1)
+                    break;
+            // Make sure this program happens within the specified timeslot
+                if ($program->starttime >= $end_time || $program->endtime <= $start_time)
+                    continue;
+            // Get a modified start/end time for this program (in case it starts/ends outside of the aloted time
+                $program_starts = $program->starttime;
+                $program_ends   = $program->endtime;
+                if ($program->starttime < $start_time)
+                    $program_starts = $start_time;
+                if ($program->endtime > $end_time)
+                    $program_ends = $end_time;
+            // If there is a gap before the current program, put a NO DATA block in.
+                if ($program_starts > $start_time) {
+                    $length = (($program_starts - $start_time) / $timeslot_size);
+                    if ($length >= 0.5) {
+                        $timeslots_used = ceil($length);
+                        require tmpl_dir.'list_cell_nodata.php';
+                        $start_time += $timeslots_used * (defined('timeslot_size') ? timeslot_size : 1);
+                        if ($timeslots_left < $timeslots_used)
+                            $timeslots_used = $timeslots_left;
+                        $timeslots_left -= $timeslots_used;
+                    }
                 }
+            // Calculate the number of time slots this program gets
+                $length = (($program_ends - $program_starts) / $timeslot_size);
+                if ($length < .5) continue; // ignore shows that don't take up at least half a timeslot
+                $timeslots_used = ceil($length);
+            // Increment $start_time so we avoid putting tiny shows (ones smaller than a timeslot) into their own timeslot
+                $start_time += $timeslots_used * (defined('timeslot_size') ? timeslot_size : 1);
+            // Make sure this doesn't put us over
+                if ($timeslots_left < $timeslots_used)
+                    $timeslots_used = $timeslots_left;
+                $timeslots_left -= $timeslots_used;
+                #if ($timeslots_left > 0)
+                require tmpl_dir.'list_cell_program.php';
+            // Cleanup is good
+                unset($program);
             }
-        // Calculate the number of time slots this program gets
-            $length = (($program_ends - $program_starts) / $timeslot_size);
-            if ($length < .5) continue; // ignore shows that don't take up at least half a timeslot
-            $timeslots_used = ceil($length);
-        // Increment $start_time so we avoid putting tiny shows (ones smaller than a timeslot) into their own timeslot
-            $start_time += $timeslots_used * $timeslot_size;
-        // Make sure this doesn't put us over
-            if ($timeslots_left < $timeslots_used)
-                $timeslots_used = $timeslots_left;
-            $timeslots_left -= $timeslots_used;
-            #if ($timeslots_left > 0)
-            require tmpl_dir.'list_cell_program.php';
-        // Cleanup is good
-            unset($program);
         }
     // Uh oh, there are leftover timeslots - display a no data message
         if ($timeslots_left > 0) {
-            $timeslots_left = $timeslots_used;
+            $timeslots_left = isset($timeslots_used) ? $timeslots_used : $timeslots_left;
             require tmpl_dir.'list_cell_nodata.php';
         }
     }

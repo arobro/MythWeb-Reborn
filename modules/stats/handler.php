@@ -17,21 +17,25 @@
  *        AND program.endtime > program.starttime;
  *
  **/
+    $query_time = $_REQUEST['query_time'] ?? '';
+
     $where = ' WHERE 1';
-    if ($_REQUEST['query_time'] == 'day')
+    if ($query_time === 'day')
         $where = ' WHERE UNIX_TIMESTAMP(starttime) > '.(time()-24*60*60);
-    if ($_REQUEST['query_time'] == 'week')
+    if ($query_time === 'week')
         $where = ' WHERE UNIX_TIMESTAMP(starttime) > '.(time()-7*24*60*60);
-    if ($_REQUEST['query_time'] == 'month')
+    if ($query_time === 'month')
         $where = ' WHERE UNIX_TIMESTAMP(starttime) > '.(time()-31*24*60*60);
-    if ($_REQUEST['query_time'] == 'year')
+    if ($query_time === 'year')
         $where = ' WHERE UNIX_TIMESTAMP(starttime) > '.(time()-365*24*60*60);
     $where .= ' AND oldrecorded.recstatus = -3 AND oldrecorded.future = 0';
 
+    $count_dropdown = $_REQUEST['count_dropdown'] ?? '';
+
     $limit = 'LIMIT 10';
-    if (is_numeric($_REQUEST['count_dropdown']))
-        $limit = 'LIMIT '.$_REQUEST['count_dropdown'];
-    if ($_REQUEST['count_dropdown'] == 'all')
+    if (is_numeric($count_dropdown))
+        $limit = 'LIMIT '.(int)$count_dropdown;
+    if ($count_dropdown === 'all')
         $limit = '';
 
 
@@ -58,6 +62,8 @@
                               FROM oldrecorded '
                          .$where.' AND endtime > starttime');
 
+    $shows = array();
+
 // Get the top ten recorded shows
     $sh = $db->query('SELECT title,
                              COUNT(programid)               AS recorded,
@@ -69,6 +75,8 @@
     while($row = $sh->fetch_assoc())
         $shows[] = $row;
     $sh->finish();
+
+    $channels = array();
 
 // Get the top recorded channels
     $sh = $db->query('SELECT COUNT(oldrecorded.chanid) as recorded,
