@@ -12,8 +12,10 @@ class Cache {
 
     public static function &get($key = null) {
         $data = &Cache::$Instance->get($key);
-        if (!$data)
-            return null;
+        if (!$data) {
+            $null = null;
+            return $null;
+        }
         return $data;
 
     }
@@ -49,4 +51,4 @@ class Cache {
     }
 }
 
-Cache::initalize($_SESSION['cache_engine']);
+Cache::initalize($_SESSION['cache_engine'] ?? null);

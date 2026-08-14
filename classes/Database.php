@@ -254,12 +254,12 @@ class Database {
  *
  *  @return mixed           Statement handle for the current type of database connection
  **/
-    function &query($query) {
+	function &query($query) {
     // Hack to get query_row and query_assoc working correctly
         $args = array_slice(func_get_args(), 1);
     // Create and return a database query
         $start_time = microtime(true);
-        $this->last_sh =& $this->prepare($query);
+        $this->last_sh = $this->prepare($query);
         $this->last_sh->execute($args);
         $this->query_time += microtime(true) - $start_time;
         $this->query_count++;

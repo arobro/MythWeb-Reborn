@@ -95,7 +95,7 @@ class Translate extends MythBase {
             }
         }
     // Pull in the translated string (or default to $str if the translated string is '')
-        if ($this->translations[$str])
+        if (!empty($this->translations[$str]))
             $str = $this->translations[$str];
 
     // Nothing extra to print
@@ -123,8 +123,10 @@ class Translate extends MythBase {
     // Flatten arrays
         $ab = func_get_args();
         $a[] = $ab[0];
-        foreach ($ab[1] as $b)
-            $a[] = $b;
+        if (isset($ab[1]) && is_array($ab[1])) {
+            foreach ($ab[1] as $b)
+                $a[] = $b;
+        }
     // Array of arguments?
         if (is_array($a[count($a)-1]))
             $args = array_pop($a);
@@ -134,7 +136,7 @@ class Translate extends MythBase {
         if (!isset($args))
             $args = array(t($int));
     // Return the appropriate translated string
-        if ($a[$int-1])
+        if (isset($a[$int-1]))
             return $this->string($a[$int-1], $args);
         return $this->string($a[count($a)-1], $args);
     }
@@ -164,9 +166,9 @@ class Translate extends MythBase {
             $path = modules_path.'/_shared/lang/English.lang';
 
     // Load a module override translation if one exists.
-        if (file_exists(modules_path.'/'.module.'/lang/'.$language.'.lang'))
+        if (defined('module') && file_exists(modules_path.'/'.module.'/lang/'.$language.'.lang'))
             $path = modules_path.'/'.module.'/lang/'.$language.'.lang';
-        elseif (file_exists(modules_path.'/'.module.'/lang/English.lang'))
+        elseif (defined('module') && file_exists(modules_path.'/'.module.'/lang/English.lang'))
             $path = modules_path.'/'.module.'/lang/English.lang';
 
         $file = @file_get_contents($path);
@@ -184,8 +186,10 @@ class Translate extends MythBase {
             $trans  = '';
             if (count($match) == 2)
                 list($match, $key) = $match;
-            else
+            elseif (count($match) >= 4)
                 list($match, $key, $indent, $trans) = $match;
+            else
+                continue;
 
         // Cleanup
             $trans = trim(str_replace("\n$indent", "\n", $trans));
@@ -265,42 +269,41 @@ class Translate extends MythBase {
  **/
     private static function get_browser_lang() {
     // default to "everything is acceptable", as RFC2616 specifies
-        $alparts = explode(',', $_SERVER["HTTP_ACCEPT_LANGUAGE"] ? $_SERVER["HTTP_ACCEPT_LANGUAGE"] : '*');
-        $acparts = explode(',', $_SERVER["HTTP_ACCEPT_CHARSET"]  ? $_SERVER["HTTP_ACCEPT_CHARSET"]  : '*');
+        $acceptLang = $_SERVER["HTTP_ACCEPT_LANGUAGE"] ?? '*';
+        $acceptChar = $_SERVER["HTTP_ACCEPT_CHARSET"]  ?? '*';
+
+        $alparts = explode(',', $acceptLang ? $acceptLang : '*');
+        $acparts = explode(',', $acceptChar ? $acceptChar : '*');
+
     // Parse the contents of the Accept-Language header.
         $alscores = array();
         foreach($alparts as $part) {
             $part = trim($part);
             if (strstr($part, ';')) {
                 $lang  = explode(';', $part);
-                $score = explode('=', $lang[1]);
-                $alscores[$lang[0]] = $score[1];
+                $score = explode('=', $lang[1] ?? '');
+                $alscores[$lang[0]] = $score[1] ?? 1;
             }
             else
                 $alscores[$part] = 1;
         }
-    // Do the same for the Accept-Charset header. */
-        /* RFC2616: ``If no '*' is present in an Accept-Charset field, then
-         * all character sets not explicitly mentioned get a quality value of
-         * 0, except for ISO-8859-1, which gets a quality value of 1 if not
-         * explicitly mentioned.''
-         *
-         * Making it 2 for the time being, so that we can distinguish between
-         * "not specified" and "specified as 1" later on.
-         */
+
+    // Do the same for the Accept-Charset header.
         $acscores = array('ISO-8859-1' => 2);
         foreach($acparts as $part) {
             $part = trim($part);
             if (strstr($part, ';')) {
                 $cs    = explode(';', $part);
-                $score = explode('=', $cs[1]);
-                $acscores[strtoupper($cs[0])]=$score[1];
+                $score = explode('=', $cs[1] ?? '');
+                $acscores[strtoupper($cs[0])] = $score[1] ?? 1;
             }
             else
-                $acscores[strtoupper($part)]=1;
+                $acscores[strtoupper($part)] = 1;
         }
-        if ($acscores['ISO-8859-1'] == 2)
-            $acscores['ISO-8859-1'] = $acscores['*'] ? $acscores['*'] : 1;
+
+        if (($acscores['ISO-8859-1'] ?? 0) == 2)
+            $acscores['ISO-8859-1'] = $acscores['*'] ?? 1;
+
         /*
          * Loop through the available languages/encodings, and pick the one
          * with the highest score, excluding the ones with a charset the user
@@ -317,17 +320,19 @@ class Translate extends MythBase {
                 if (empty($encoding))
                     continue;
                 $tmp      = @explode('.', str_replace('_', '-', $encoding));
-                $allang   = strtolower($tmp[0]);
-                $cs       = strtoupper($tmp[1]);
+                $allang   = strtolower($tmp[0] ?? '');
+                $cs       = strtoupper($tmp[1] ?? '');
                 $noct     = explode('-', $allang);
+
                 $testvals = array(
-                                  array($alscores[$allang],  $acscores[$cs]),
-                                  array($alscores[$noct[0]], $acscores[$cs]),
-                                  array($alscores[$allang],  $acscores['*']),
-                                  array($alscores[$noct[0]], $acscores['*']),
-                                  array($alscores['*'],      $acscores[$cs]),
-                                  array($alscores['*'],      $acscores['*'])
+                                  array($alscores[$allang]  ?? null, $acscores[$cs]  ?? null),
+                                  array($alscores[$noct[0]] ?? null, $acscores[$cs]  ?? null),
+                                  array($alscores[$allang]  ?? null, $acscores['*']  ?? null),
+                                  array($alscores[$noct[0]] ?? null, $acscores['*']  ?? null),
+                                  array($alscores['*']      ?? null, $acscores[$cs]  ?? null),
+                                  array($alscores['*']      ?? null, $acscores['*']  ?? null)
                                  );
+
             // Scan through the possible test-match values until we find a valid set
                 foreach($testvals as $tval) {
                     if(!isset($tval[0]) || !isset($tval[1]))
