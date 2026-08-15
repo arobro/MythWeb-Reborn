@@ -664,8 +664,12 @@
         <div id="x-downloads">
 
             <div class="x-pixmap">
-<?php   if (setting('WebFLV_on')) { ?>
-<?php       if (file_exists('js/libs/flowplayer/flowplayer.swf')) { ?>
+ <?php   if (setting('WebFLV_on')) { ?>
+          <!--Embed HTML5 video if supported-->
+            <video controls="controls" preload="none" width="<?php echo $flv_w ?>" height="<?php echo $flv_h ?>" poster="<?php echo $program->thumb_url($flv_w,0) ?>">
+                <source src="<?php echo video_url($program, 'ogv'); ?>" type="video/ogg" />
+                <source src="<?php echo video_url($program, 'webm'); ?>" type="video/webm" />
+ <?php       if (file_exists('js/libs/flowplayer/flowplayer.swf')) { ?>
 
 
           <!-- this A tag is where your Flowplayer will be placed. it can be anywhere -->

@@ -33,6 +33,14 @@
     elsif ($ENV{'REQUEST_URI'} =~ /\.mp4$/i) {
         require "modules/$Path[0]/stream_mp4.pl";
     }
+# HTML5 video/ogv
+    elsif ($ENV{'REQUEST_URI'} =~ /\.ogv$/i) {
+        require "modules/$Path[0]/stream_ogv.pl";
+    }
+# HTML5 video/webm
+    elsif ($ENV{'REQUEST_URI'} =~ /\.webm$/i) {
+        require "modules/$Path[0]/stream_webm.pl";
+   }
 # Raw file?
     else {
         require "modules/$Path[0]/stream_raw.pl";

@@ -193,6 +193,8 @@
     # should actually be NuppleVideo.  However, apache probably doesn't know what
     # those are, so we should tell it.
         AddType video/nuppelvideo   .nuv
+		AddType video/ogg           .ogv .ogg
+        AddType video/webm          .webm
 
     # Specify the MIME type for favicon.ico in case the server configuration
     # doesn't or in case the server configuration uses the IANA-approved MIME type
