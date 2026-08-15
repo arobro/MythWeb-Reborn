@@ -8,6 +8,7 @@
  * @subpackage  TV
  *
  **/
+	require_once __DIR__ . '/../../includes/authentication.php';
 
     $hostname   = $Path[2] ?? null;
     $chanid     = $Path[3] ?? null;

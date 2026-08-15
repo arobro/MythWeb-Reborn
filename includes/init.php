@@ -48,6 +48,9 @@
 // Load the session handler routines
     require_once 'includes/session.php';
 
+// Load authentication
+	require_once('authentication.php');
+
 // Load the translation routines so the modules can translate their descriptions
     require_once 'includes/translate.php';
 

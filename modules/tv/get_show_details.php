@@ -1,4 +1,6 @@
 <?php
+	require_once __DIR__ . '/../../includes/authentication.php';
+
 // Attempt to force some caching, will make secondary views so much faster.
     header('Cache-Control: max-age=7200, public');
     header('Pragma: ');
