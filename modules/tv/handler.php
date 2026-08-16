@@ -60,13 +60,6 @@
     if (empty($Path[1]) && is_array($_SESSION['tv']['last']))
         array_splice($Path, 1, count($Path), $_SESSION['tv']['last']);
 
-// Flash player?
-    if (preg_match('/\.swf/', $Path[1])) {
-        header('Content-Type: application/x-shockwave-flash');
-        readfile('modules/tv/'.$Path[1]);
-        exit;
-    }
-
 // Unknown section?  Use the default
     if (!file_exists('modules/tv/'.$Path[1].'.php'))
         $Path[1] = 'list';
