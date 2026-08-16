@@ -1,4 +1,5 @@
-        window.onload=function(){ init(); };
+<?php header('Content-Type: application/javascript; charset=utf-8');?>
+	  window.onload=function(){ init(); };
 
         function init(){
             setPageTitle();

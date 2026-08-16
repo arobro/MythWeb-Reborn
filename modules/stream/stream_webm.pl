@@ -33,20 +33,22 @@
     }
 
 # Find ffmpeg
-    $ffmpeg = '';
-    foreach my $path (split(/:/, $ENV{'PATH'}.':/usr/local/bin:/usr/bin'), '.') {
-        if (-e "$path/ffmpeg") {
-            $ffmpeg = "$path/ffmpeg";
-            last;
-        }elsif (-e "$path/mythffmpeg") {
-            $ffmpeg = "$path/mythffmpeg";
-            last;
-        }
-        elsif ($^O eq 'darwin' && -e "$path/ffmpeg.app") {
-            $ffmpeg = "$path/ffmpeg.app";
-            last;
-        }
-    }
+	$ffmpeg = '';
+	my ($found_ffmpeg, $found_mythffmpeg, $found_darwin);
+
+	foreach my $path (split(/:/, $ENV{'PATH'}.':/usr/local/bin:/usr/bin'), '.') {
+		if (!$found_ffmpeg && -e "$path/ffmpeg") {
+			$found_ffmpeg = "$path/ffmpeg";
+		}
+		if (!$found_mythffmpeg && -e "$path/mythffmpeg") {
+			$found_mythffmpeg = "$path/mythffmpeg";
+		}
+		if (!$found_darwin && $^O eq 'darwin' && -e "$path/ffmpeg.app") {
+			$found_darwin = "$path/ffmpeg.app";
+		}
+	}
+
+	$ffmpeg = $found_ffmpeg || $found_mythffmpeg || $found_darwin || '';
 
 # Load some conversion settings from the database
     $sh = $dbh->prepare('SELECT data FROM settings WHERE value=? AND hostname IS NULL');

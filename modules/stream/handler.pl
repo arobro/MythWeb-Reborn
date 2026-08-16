@@ -22,21 +22,6 @@
     if ($ENV{'REQUEST_URI'} =~ /\.asx$/i) {
         require "modules/$Path[0]/stream_asx.pl";
     }
-# Flash?
-    elsif ($ENV{'REQUEST_URI'} =~ /\.flvp$/i) {
-        require "modules/$Path[0]/stream_flvp.pl";
-    }
-    elsif ($ENV{'REQUEST_URI'} =~ /\.flv$/i) {
-        require "modules/$Path[0]/stream_flv.pl";
-    }
-# Mpeg4?
-    elsif ($ENV{'REQUEST_URI'} =~ /\.mp4$/i) {
-        require "modules/$Path[0]/stream_mp4.pl";
-    }
-# HTML5 video/ogv
-    elsif ($ENV{'REQUEST_URI'} =~ /\.ogv$/i) {
-        require "modules/$Path[0]/stream_ogv.pl";
-    }
 # HTML5 video/webm
     elsif ($ENV{'REQUEST_URI'} =~ /\.webm$/i) {
         require "modules/$Path[0]/stream_webm.pl";
