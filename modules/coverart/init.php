@@ -8,4 +8,6 @@
  * @subpackage  Video Coverart
  *
  **/
+
+    $Modules['coverart'] = array('path'        => 'coverart'    );
 ?>
