@@ -739,7 +739,59 @@
 ?>
     </div>
     </div>
-<?php
+
+<div id="content">
+	<table id="x-info" width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+			<td><h3 style="padding-left: 10px;"><?php echo ('Alternative Screenings:') ?></h3></td>
+		</tr>
+		<tr>
+			<td>
+				<table width="100%" border="0" cellpadding="4" cellspacing="2" class="list small">
+					<tbody>
+						<tr class="menu">
+							<th style="text-align: left;"><?php echo t('Subtitle') ?></th>
+							<th style="text-align: left;"><?php echo t('Channel') ?></th>
+							<th style="text-align: left;"><?php echo t('Date') ?></th>
+							<th style="text-align: left;"><?php echo t('Time') ?></th>
+						</tr>
+						<?php if (empty($alt_screenings)): ?>
+							<tr>
+								<td colspan="5" style="text-align: left;">
+									<em><?php echo ('No alternative screenings.') ?></em>
+								</td>
+							</tr>
+						<?php else: ?>
+							<?php $last_date = ''; ?>
+							<?php foreach ($alt_screenings as $row): ?>
+								<?php
+									$local_ts = strtotime($row['starttime'] . ' +00:00');
+									$detail_url = root_url . 'tv/detail/' . $row['chanid'] . '/' . $local_ts;
+
+									$display_date = date('Y-m-d', $local_ts);
+
+									$is_new_group = ($last_date !== '' && $last_date !== $display_date);
+									$last_date = $display_date;
+								?>
+								<tr class="clickable-row <?php echo $is_new_group ? 'new-date-group' : ''; ?>" onclick="window.location='<?php echo $detail_url; ?>';">
+									<td style="text-align: left;">
+										<?php echo $row['subtitle']; ?>
+									</td>
+									<td style="text-align: left;">
+										<?php echo html_entities($row['channel_name']); ?>
+									</td>
+									<td style="text-align: left;"><?php echo date('D j M', $local_ts); ?></td>
+									<td style="text-align: left;"><?php echo preg_replace('/^0/', '&nbsp&nbsp', date('H:i', $local_ts)); ?></td>
+								</tr>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+	</table>
+</div>
+	<?php
 
 // Print the page footer
     require 'modules/_shared/tmpl/'.tmpl.'/footer.php';
