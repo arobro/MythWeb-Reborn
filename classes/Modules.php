@@ -41,9 +41,17 @@ class Modules implements Cache_Enabled {
         unset($Modules);
     }
 
-    public static function getModules() {
+	public static function getModules($include_hidden = false) {
         self::load();
-        return self::$Modules;
+
+        if ($include_hidden) {
+            return self::$Modules;
+        }
+
+        // Filter out any module where 'hidden' => true
+        return array_filter(self::$Modules, function($module) {
+            return empty($module['hidden']);
+        });
     }
 
     public static function getModule($module) {

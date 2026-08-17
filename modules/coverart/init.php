@@ -9,5 +9,8 @@
  *
  **/
 
-    $Modules['coverart'] = array('path'        => 'coverart'    );
+    $Modules['coverart'] = [
+        'path'   => 'coverart',
+        'hidden' => true,
+    ];
 ?>

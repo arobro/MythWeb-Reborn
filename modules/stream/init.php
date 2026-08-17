@@ -18,4 +18,7 @@
         'default' => 'protocol',
     ];
 
-    $Modules['stream'] = array('path'        => 'stream'    );
+    $Modules['stream'] = [
+        'path'   => 'stream',
+        'hidden' => true,
+    ];
