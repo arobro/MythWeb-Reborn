@@ -5,7 +5,7 @@
  * @license     GPL
  *
  * @package     MythWeb
- * @subpackage  Music
+ * @subpackage  Stream
  *
  **/
 

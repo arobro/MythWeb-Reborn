@@ -9,10 +9,6 @@
 # authentication for MythWeb's download URLs so you can properly stream
 # to media players that don't work with authenticated servers.
 #
-#    <LocationMatch .*/pl/stream/[0-9]+/[0-9]+>
-#        Allow from all
-#        Satisfy Any
-#    </LocationMatch>
 #
 #    <LocationMatch .*/music/stream.php>
 #        Allow from all
@@ -56,7 +52,7 @@
     ############################################################################
     # Some special instructions for the MythWeb controller files
     #
-        <Files mythweb.*>
+        <FilesMatch "^(mythweb|localHandler)\..*$">
 
         #
         # Use the following environment settings to tell MythWeb where you want it to
@@ -99,7 +95,7 @@
         #
         #   setenv fs_encoding       "ISO-8859-1"
 
-        </Files>
+        </FilesMatch>
 
     ############################################################################
     # The following settings relate to PHP config.
@@ -160,19 +156,14 @@
 
     # Skip out early if we've already been through rewrites,
     # or if this is a /css/, /js/ or /cache/ directory request.
-        RewriteRule    ^(css|data|images|js|themes|skins|README|INSTALL|[a-z_]+\.(php|pl))(/|$)     -     [L]
+        RewriteRule    ^(css|data|images|js|themes|skins|README|INSTALL|[a-zA-Z0-9_-]+\.(php|pl))(/|$)     -     [L,NC]
 
-    # Redirect /pl/ requests to the perl cgi handler.
-        RewriteRule     ^(pl(/.*)?)$            mythweb.pl/$1               [QSA,L]
+	# Redirect /lo/ requests to the local handler.
+        RewriteRule     ^(tn(/.*)?)$            token.php/$1               [QSA,L]
 
     # Redirect most of the remaining URL requests to the main mythweb script.
     # It will then handle any requests given to it.
         RewriteRule     ^(.+)$                  mythweb.php/$1              [QSA,L]
-
-    # If you're experiencing trouble with the previous two lines in your copy of
-    # apache, you could instead use something like:
-    #    RewriteRule     ^(pl(/.*)?)$           mythweb.pl?PATH_INFO=/$1    [L,QSA]
-    #    RewriteRule     ^(.+)$                 mythweb.php?PATH_INFO=/$1   [L,QSA]
 
     # Catch anything else that comes through and send it to mythweb.php with no parameters.
         RewriteRule     ^(.*)$                  mythweb.php                 [QSA,L]
@@ -238,14 +229,5 @@
         <IfModule headers_module>
             Header append Vary User-Agent env=!dont-vary
         </IfModule>
-
-    # Set up the perl handler so we can stream properly.  Do not use mod_perl
-    # because it has a tendency to hold onto child processes, which causes
-    # problems if the browser closes on an in-progress stream.
-    #
-        <Files *.pl>
-            SetHandler cgi-script
-            Options +ExecCGI
-        </Files>
 
     </Directory>

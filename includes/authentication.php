@@ -77,7 +77,8 @@ if (is_object($db)) {
     try {
         $db->query("CREATE TABLE IF NOT EXISTS mythweb_users (
             username VARCHAR(128) NOT NULL PRIMARY KEY,
-            stored_key VARCHAR(64) NOT NULL
+            stored_key VARCHAR(64) NOT NULL,
+			token VARCHAR(64) NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
         $db->query("CREATE TABLE IF NOT EXISTS mythweb_ip_limits (
@@ -180,7 +181,11 @@ if (isset($_POST['create_user'])) {
                 exit();
             }
 
-            $db->query("INSERT INTO mythweb_users (username, stored_key) VALUES (?, ?)", [$login, $client_stored_key]);
+			$token = bin2hex(random_bytes(32));
+			$db->query(
+				"INSERT INTO mythweb_users (username, stored_key, token) VALUES (?, ?, ?)",
+				[$login, $client_stored_key, $token]
+			);
         } catch (Exception $e) {
             renderAuthPage("A database error occurred while creating the user account.", ($user_count === 0), $is_whitelisted, ($user_count > 0));
             exit();
@@ -191,6 +196,7 @@ if (isset($_POST['create_user'])) {
     update_db_ip_rate_limit($client_ip, 0, 0);
     $_SESSION['authenticated'] = true;
     $_SESSION['last_activity'] = time();
+	$_SESSION['user_token']    = $token;
 
     header("Location: " . get_safe_redirect_url($redirect_uri));
     exit();
@@ -225,9 +231,10 @@ if (isset($_POST['access_password'])) {
 
     if (is_object($db)) {
         try {
-            $result = $db->query("SELECT stored_key FROM mythweb_users WHERE username = ?", [$login]);
+            $result = $db->query("SELECT stored_key, token FROM mythweb_users WHERE username = ?", [$login]);
             if ($result && $row = $result->fetch_assoc()) {
                 $db_stored_key = $row['stored_key'];
+				$db_user_token = $row['token'];
             }
         } catch (Exception $e) {}
     }
@@ -265,6 +272,7 @@ if (isset($_POST['access_password'])) {
         update_db_ip_rate_limit($client_ip, 0, 0);
         $_SESSION['authenticated'] = true;
         $_SESSION['last_activity'] = time();
+		$_SESSION['user_token'] = $db_user_token;
 
         header("Location: " . get_safe_redirect_url($redirect_uri));
         exit();

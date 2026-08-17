@@ -248,15 +248,11 @@ if (!defined('tb')) define('tb', 1099511627776);
             return 'file://'.$_SESSION['file_url_override'].str_replace('%2F', '/', rawurlencode(basename($show->filename)));
     // Which protocol should we use for downloads?
 
-        $url = root_url."pl/stream/{$show->chanid}/{$show->recstartts}";
+        $url = root_url."stream/{$show->chanid}/{$show->recstartts}";
     // Handle specific file extension modes
         switch ($ext) {
         // ASX mode gets the streaming module, with a slight addition
             case 'asx' : return "$url.asx";
-            case 'flvp': return "$url.flvp";
-            case 'flv' : return "$url.flv";
-            case 'mp4' : return "$url.mp4";
-            case 'ogv' : return "$url.ogv";
             case 'webm': return "$url.webm";
         }
     // No more dsmyth filters, so return the URL no matter what the browser is.

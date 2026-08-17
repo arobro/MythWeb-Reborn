@@ -1,17 +1,21 @@
 <?php
 /**
- * Initialization routines for the MythWeb Streaming module
+ * This is pretty much a dummy module to hold the settings sections that
+ * pertain to Mythbackend and other things not actually present within MythWeb
+ * itself.
  *
  * @license     GPL
  *
  * @package     MythWeb
- * @subpackage  Music
- *
+ * @subpackage  Stream
  **/
 
-    $Settings['stream'] = array('name'    => t('Streaming'),
-                                'choices' => array('protocol'  => t('Protocol'),
-                                                  ),
-                                'default' => 'protocol',
-                               );
+    $Settings['stream'] = [
+        'name'    => t('Streaming'),
+        'choices' => [
+            'protocol' => t('Protocol'),
+        ],
+        'default' => 'protocol',
+    ];
 
+    $Modules['stream'] = array('path'        => 'stream'    );
