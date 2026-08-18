@@ -323,49 +323,51 @@
     $Page_Title_Short = 'Details';
 
 // Fetch alternative screenings based on Title match
-$alt_screenings = array();
-if ($program && !empty($program->title)) {
-    $sql = "
-SELECT
-    MIN(p.chanid) AS chanid,
-    p.starttime,
-    p.endtime,
-    p.title,
-    p.subtitle,
-    c.name AS channel_name
-FROM
-    program p
-INNER JOIN
-    channel c ON p.chanid = c.chanid
-WHERE
-    p.title = ?
-    AND p.endtime >= NOW()
-    AND c.visible = 1
-    AND p.description = ?
-	AND p.subtitle = ?
-	AND NOT (p.starttime = ?)
-GROUP BY
-    p.starttime,
-    p.endtime,
-    p.title,
-    p.subtitle
-ORDER BY
-    p.starttime ASC
-LIMIT 5;
-    ";
+	if ($program->recstatus != 'Recorded' and $program->recstatus != 'Recording'){
+		$alt_screenings = array();
+		if ($program && !empty($program->title)) {
+			$sql = "
+		SELECT
+			MIN(p.chanid) AS chanid,
+			p.starttime,
+			p.endtime,
+			p.title,
+			p.subtitle,
+			c.name AS channel_name
+		FROM
+			program p
+		INNER JOIN
+			channel c ON p.chanid = c.chanid
+		WHERE
+			p.title = ?
+			AND p.endtime >= NOW()
+			AND c.visible = 1
+			AND p.description = ?
+			AND p.subtitle = ?
+			AND NOT (p.starttime = ?)
+		GROUP BY
+			p.starttime,
+			p.endtime,
+			p.title,
+			p.subtitle
+		ORDER BY
+			p.starttime ASC
+		LIMIT 5;
+			";
 
-	$starttime_datetime = unix2mythtime($program->starttime);
+			$starttime_datetime = unix2mythtime($program->starttime);
 
-    $sh = $db->query($sql,
-                    $program->title,
-                    $program->description,
-					$program->subtitle,
-					$starttime_datetime);
+			$sh = $db->query($sql,
+							$program->title,
+							$program->description,
+							$program->subtitle,
+							$starttime_datetime);
 
-    while ($row = $sh->fetch_assoc()) {
-        $alt_screenings[] = $row;
-    }
-}
+			while ($row = $sh->fetch_assoc()) {
+				$alt_screenings[] = $row;
+			}
+		}
+	}
 
 // Display the page
     require_once tmpl_dir.'detail.php';

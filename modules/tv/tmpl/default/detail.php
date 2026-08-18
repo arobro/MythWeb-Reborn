@@ -739,7 +739,7 @@
 ?>
     </div>
     </div>
-
+<?php if ($program->recstatus != 'Recorded' and $program->recstatus != 'Recording') { ?>
 <div id="content">
 	<table id="x-info" width="100%" border="0" cellspacing="0" cellpadding="0">
 		<tr>
@@ -792,6 +792,7 @@
 	</table>
 </div>
 	<?php
+}
 
 // Print the page footer
     require 'modules/_shared/tmpl/'.tmpl.'/footer.php';
