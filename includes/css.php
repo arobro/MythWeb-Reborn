@@ -14,48 +14,76 @@
  **/
     function category_class(&$item) {
         $css_class = array();
-        $cache = array();
-    // Disable categories colorization
-        if (isset($_SESSION['genre_colors'])
-                  && $_SESSION['genre_colors'] == 0) {
-            $css_class[] = $cache[$category] = 'cat_Unknown';
+
+        // Disable categories colorization
+        if (isset($_SESSION['genre_colors']) && $_SESSION['genre_colors'] == 0) {
+            $css_class[] = 'cat_Unknown';
             return $css_class[0];
         }
-    // Recording classes?
+
+        // Recording classes
         $css_class[] = recstatus_class($item);
-    // Category type?
-        if ($item->category_type && !preg_match('/unknown/i', $item->category_type))
-            $css_class[] = 'type_'.preg_replace("/[^a-zA-Z0-9\-_]+/", '_', $item->category_type);
-    // Category cache
-        $category = strtolower($item->category);    // user lowercase to avoid a little overhead later
+
+        // Category type
+        if (!empty($item->category_type) && !preg_match('/unknown/i', $item->category_type)) {
+            $css_class[] = 'type_' . preg_replace("/[^a-zA-Z0-9\-_]+/", '_', $item->category_type);
+        }
+
+        // Extract ONLY the first word from the category using standard strtolower
+        $raw_cat = isset($item->category) ? $item->category : '';
+        $clean_cat = trim(strtolower($raw_cat));
+
+        // Split by non-alphanumeric characters to reliably grab the first word
+        $parts = preg_split('/[^a-z0-9]+/i', $clean_cat, -1, PREG_SPLIT_NO_EMPTY);
+        $first_word = !empty($parts) ? $parts[0] : '';
+
+        // Static cache for category matches
         static $cache = array();
-        if ($cache[$category])
-            $css_class[] = $cache[$category];
-    // Scan the $Categories hash for any matches
-        else {
+
+        if (!empty($first_word) && isset($cache[$first_word])) {
+            $css_class[] = $cache[$first_word];
+        } else {
             global $Categories;
-            if (!empty($Categories)) {
+            $matched_class = null;
+
+            if (!empty($Categories) && !empty($first_word)) {
                 foreach ($Categories as $cat => $details) {
-                    if ($category == strtolower($details[0])) {
-                        $css_class[] = $cache[$category] = 'cat_'.$cat;
+                    // Normalize target category name from $Categories
+                    $target_cat = strtolower(isset($details[0]) ? $details[0] : '');
+
+                    // Extract first word of the array category details
+                    $target_parts = preg_split('/[^a-z0-9]+/i', $target_cat, -1, PREG_SPLIT_NO_EMPTY);
+                    $target_word = !empty($target_parts) ? $target_parts[0] : '';
+
+                    // Check direct match on the first word
+                    if ($first_word === $target_word) {
+                        $matched_class = 'cat_' . $cat;
                         break;
                     }
-                    if (!$details[1])
-                        continue;
-                    if (preg_match('/'.$details[1].'/', $category)) {
-                        $css_class[] = $cache[$category] = 'cat_'.$cat;
+
+                    // Fallback: Check optional regex pattern if defined
+                    if (!empty($details[1]) && @preg_match('/' . $details[1] . '/i', $first_word)) {
+                        $matched_class = 'cat_' . $cat;
                         break;
                     }
                 }
             }
+
+            // Default if no match is found
+            if (!$matched_class) {
+                $matched_class = 'cat_Unknown';
+            }
+
+            // Cache the result for this first word
+            if (!empty($first_word)) {
+                $cache[$first_word] = $matched_class;
+            }
+
+            $css_class[] = $matched_class;
         }
-    // No category found?
-        if (!$cache[$category])
-            $css_class[] = $cache[$category] = 'cat_Unknown';
-    // Return
+
         return preg_replace('/ +/', ' ', implode(' ', $css_class));
     }
-
 /**
  * Returns a classname for a Program or a Schedule, based on its recording
  * status.
