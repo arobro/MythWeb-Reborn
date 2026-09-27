@@ -212,14 +212,13 @@
 
 .mythweb-timeline-row .time-cell:last-child {
     margin-right: 0;
-    border-right: none !important; /* Removes border on the last time header cell */
+    border-right: none !important;
 }
 
 .mythweb-timeline-row .time-cell:last-child {
     margin-right: 0;
 }
 
-/* Default state (Normal/Wide Windows): Show full time (e.g., 3:00 PM, 3:15 PM) */
 .time-cell .time-hour-only {
     display: none;
 }
@@ -286,6 +285,21 @@
     box-sizing: border-box;
     border-radius: 0;
 	border-right: 2px solid var(--bg-color);
+	pointer-events: none;
+}
+
+.programme-card .prog-title,
+.programme-card .prog-subtitle {
+    pointer-events: auto;
+    display: inline-block;
+    color: inherit;
+}
+
+.programme-card .prog-title:hover,
+.programme-card .prog-subtitle:hover,
+.programme-card:has(.prog-title:hover) .prog-subtitle,
+.programme-card:has(.prog-subtitle:hover) .prog-title {
+    color: rgb(240, 240, 0);
 }
 
 .sliding-right-border {
@@ -294,10 +308,10 @@
 
 .prog-title,
 .prog-subtitle {
-    width: 100%; /* Ensure it respects the card's dynamic width */
-    white-space: nowrap; /* Keep text on a single line */
-    overflow: hidden; /* Hide overflow instead of leaving it visible */
-    text-overflow: ellipsis; /* Automatically append '...' */
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     box-sizing: border-box;
     display: inline-block;
 }

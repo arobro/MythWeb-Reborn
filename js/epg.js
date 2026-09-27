@@ -21,13 +21,6 @@
 		isDragging: false,
 		isProgrammaticScroll: false,
 		suppressScrollEvents: false,
-		activeHoverCardId: null,
-		hoverDelayTimer: null,
-		detailsCache: {},
-		currentMousePos: {
-			clientX: 0,
-			clientY: 0
-		},
 		scrollDebounceTimer: null,
 		isUpdatingEllipsis: false,
 		activeAjaxRequests: 0,
@@ -173,10 +166,6 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 	}
 
 	function clearActiveTimers() {
-		if (UIState.hoverDelayTimer) {
-			clearTimeout(UIState.hoverDelayTimer);
-			UIState.hoverDelayTimer = null;
-		}
 		if (UIState.scrollDebounceTimer) {
 			clearTimeout(UIState.scrollDebounceTimer);
 			UIState.scrollDebounceTimer = null;
@@ -394,7 +383,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		}
 	}
 
-function renderChannelGrid() {
+	function renderChannelGrid() {
 		const channelLabels = document.getElementById('channelLabels');
 		const gridBody = document.getElementById('gridBody');
 		if (!channelLabels || !gridBody) return;
@@ -446,7 +435,7 @@ function renderChannelGrid() {
 		gridBody.appendChild(gridFragment);
 	}
 
-function createProgramCard(prog, chanId, startPct, durationPct) {
+	function createProgramCard(prog, chanId, startPct, durationPct) {
 		const card = document.createElement('div');
 		card.className = 'programme-card' + (prog.css_class ? ' ' + prog.css_class : '');
 
@@ -500,7 +489,7 @@ function createProgramCard(prog, chanId, startPct, durationPct) {
 		return card;
 	}
 
-function initGridBodyDelegation() {
+	function initGridBodyDelegation() {
 		const gridBody = document.getElementById('gridBody');
 		if (!gridBody || gridBody.getAttribute('data-delegation-init') === 'true') return;
 		gridBody.setAttribute('data-delegation-init', 'true');
@@ -520,148 +509,10 @@ function initGridBodyDelegation() {
 
 			window.location.href = ROOT_URL + 'tv/detail/' + chanId + '/' + start + '?epg_time=' + currentEpgTime;
 		});
-
-		function isTextTarget(target) {
-			return target.closest('.prog-title, .prog-subtitle') !== null;
-		}
-
-		gridBody.addEventListener('mouseover', function(e) {
-			const card = e.target.closest('.programme-card');
-			if (!card || card.classList.contains('no-data-card') || !isTextTarget(e.target)) return;
-
-			const cardId = card.getAttribute('data-card-id');
-			if (UIState.activeHoverCardId === cardId) return;
-
-			UIState.activeHoverCardId = cardId;
-			UIState.currentMousePos = { clientX: e.clientX, clientY: e.clientY };
-			card.classList.add('text-hovered');
-
-			if (UIState.hoverDelayTimer) clearTimeout(UIState.hoverDelayTimer);
-
-			const chanId = card.getAttribute('data-chan-id');
-			const start = card.getAttribute('data-start');
-			const mousePos = { clientX: e.clientX, clientY: e.clientY };
-
-			UIState.hoverDelayTimer = setTimeout(function() {
-				fetchShowDetails(cardId, chanId, start, mousePos);
-			}, 200);
-		});
-
-		gridBody.addEventListener('mousemove', function(e) {
-			if (!UIState.activeHoverCardId || !isTextTarget(e.target)) return;
-
-			UIState.currentMousePos = { clientX: e.clientX, clientY: e.clientY };
-			const tooltip = document.getElementById('modern_epg_tooltip');
-			if (tooltip && tooltip.style.display === 'block') {
-				positionPopupRelativeToMouse(e);
-			}
-		});
-
-		gridBody.addEventListener('mouseout', function(e) {
-			const card = e.target.closest('.programme-card');
-			if (!card) return;
-
-			const related = e.relatedTarget;
-			if (related && card.contains(related) && isTextTarget(related)) return;
-
-			if (UIState.activeHoverCardId === card.getAttribute('data-card-id')) {
-				UIState.activeHoverCardId = null;
-				card.classList.remove('text-hovered');
-				if (UIState.hoverDelayTimer) clearTimeout(UIState.hoverDelayTimer);
-				hidePopup();
-			}
-		});
-
-		gridBody.addEventListener('mouseleave', function() {
-			if (UIState.activeHoverCardId) {
-				const activeCard = gridBody.querySelector('.programme-card[data-card-id="' + UIState.activeHoverCardId + '"]');
-				if (activeCard) activeCard.classList.remove('text-hovered');
-				UIState.activeHoverCardId = null;
-				if (UIState.hoverDelayTimer) clearTimeout(UIState.hoverDelayTimer);
-				hidePopup();
-			}
-		});
 	}
 
 	// ==================================================================
-	// 6. Tooltip & Popup Controllers
-	// ==================================================================
-	function fetchShowDetails(cardId, chanId, startTime, mouseEvent) {
-		if (mouseEvent) {
-			UIState.currentMousePos = {
-				clientX: mouseEvent.clientX,
-				clientY: mouseEvent.clientY
-			};
-		}
-
-		if (UIState.detailsCache[cardId]) {
-			renderPopupContent(cardId, UIState.detailsCache[cardId]);
-			return;
-		}
-
-		const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
-		updateAjaxStatus(1);
-
-		fetch(url)
-			.then(function(res) {
-				return res.json();
-			})
-			.then(function(data) {
-				if (data && data.info) {
-					cacheShowDetails(cardId, data.info);
-					renderPopupContent(cardId, data.info);
-				}
-			})
-			.catch(function(err) {
-				console.error('[ToolTip Error]', err);
-			})
-			.finally(function() {
-				updateAjaxStatus(-1);
-			});
-	}
-
-	function renderPopupContent(cardId, htmlInfo) {
-		if (cardId === UIState.activeHoverCardId) {
-			const tooltip = document.getElementById('modern_epg_tooltip');
-			if (tooltip) {
-				if (typeof DOMPurify !== 'undefined') {
-					tooltip.innerHTML = DOMPurify.sanitize(htmlInfo);
-				} else {
-					tooltip.innerHTML = htmlInfo.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-				}
-				tooltip.style.display = 'block';
-				positionPopupRelativeToMouse(UIState.currentMousePos);
-			}
-		}
-	}
-
-	function positionPopupRelativeToMouse(e) {
-		const tooltip = document.getElementById('modern_epg_tooltip');
-		if (!tooltip || !e) return;
-
-		const offset = 20;
-		let left = e.clientX + offset;
-		let top = e.clientY + offset;
-
-		if (left + tooltip.offsetWidth > window.innerWidth - 10) {
-			left = e.clientX - tooltip.offsetWidth - offset;
-		}
-		if (top + tooltip.offsetHeight > window.innerHeight - 10) {
-			top = e.clientY - tooltip.offsetHeight - offset;
-		}
-
-		tooltip.style.left = Math.max(10, left) + 'px';
-		tooltip.style.top = Math.max(10, top) + 'px';
-	}
-
-	function hidePopup() {
-		clearActiveTimers();
-		const tooltip = document.getElementById('modern_epg_tooltip');
-		if (tooltip) tooltip.style.display = 'none';
-	}
-
-	// ==================================================================
-	// 7. Visual Overlay & Truncation Engines
+	// 6. Visual Overlay & Truncation Engines
 	// ==================================================================
 	function collectCardMetrics(cards) {
 		const cardData = [];
@@ -863,7 +714,7 @@ function initGridBodyDelegation() {
 	}
 
 	// ==================================================================
-	// 8. Navigation & Scroll Mechanics
+	// 7. Navigation & Scroll Mechanics
 	// ==================================================================
 	function syncTimelinePosition(scrollLeft) {
 		const container = document.getElementById('scrollContainer');
@@ -1118,7 +969,7 @@ function initGridBodyDelegation() {
 	}
 
 	// ==================================================================
-	// 9. Network Engine
+	// 8. Network Engine
 	// ==================================================================
 	function fetchWindow(windowStart, direction, callback) {
 		const windowKey = String(windowStart);
@@ -1226,7 +1077,7 @@ function initGridBodyDelegation() {
 	}
 
 	// ==================================================================
-	// 10. Event Listeners & Drag Engine
+	// 9. Event Listeners & Drag Engine
 	// ==================================================================
 	function updateDragBrowsingLabel(scrollLeftPx) {
 		const dragElem = document.getElementById('x_current_time_drag');
@@ -1283,7 +1134,6 @@ function initGridBodyDelegation() {
 
 					container.scrollLeft = scrollLeft - walk;
 					syncTimelinePosition(container.scrollLeft);
-					hidePopup();
 
 					updateDragBrowsingLabel(container.scrollLeft);
 				}
@@ -1324,7 +1174,6 @@ function initGridBodyDelegation() {
 		container.addEventListener('scroll', function() {
 			if (UIState.suppressScrollEvents) return;
 
-			hidePopup();
 			syncTimelinePosition(container.scrollLeft);
 
 			if (container.scrollLeft > 0) {
@@ -1368,7 +1217,7 @@ function initGridBodyDelegation() {
 	}
 
 	// ==================================================================
-	// 11. Public API & Initialization
+	// 10. Public API & Initialization
 	// ==================================================================
 	window.EPG = {
 		scrollToTimestamp: function(ts) {
@@ -1476,6 +1325,32 @@ function initGridBodyDelegation() {
 				});
 			}, 200);
 		});
+
+		// Instantiate the custom tooltip library
+		const epgTooltip = new LightTooltip({
+			tooltipId: 'modern_epg_tooltip',
+			container: '#gridBody',
+			targetSelector: '.programme-card:not(.no-data-card)',
+			delay: 200,
+
+			fetchData: function(cardElem) {
+				const chanId = cardElem.getAttribute('data-chan-id');
+				const startTime = cardElem.getAttribute('data-start');
+				const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
+
+				updateAjaxStatus(1);
+
+				return fetch(url)
+					.then(res => res.json())
+					.then(data => data && data.info ? data.info : '')
+					.finally(() => updateAjaxStatus(-1));
+			}
+		});
+
+		const container = document.getElementById('scrollContainer');
+		if (container) {
+			container.addEventListener('scroll', () => epgTooltip.hide(), { passive: true });
+		}
 	});
 
 })();

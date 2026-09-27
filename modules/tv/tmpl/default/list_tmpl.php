@@ -80,6 +80,7 @@ require 'modules/_shared/tmpl/'.tmpl.'/header.php';
     var SKIN_URL         = <?php echo json_encode(skin_url); ?>;
     var INITIAL_EPG_DATA = <?php echo json_encode($initial_epg_data); ?>;
 </script>
+<script src="<?php echo root_url ?>js/tooltip.js"></script>
 <script src="<?php echo root_url ?>js/epg.js"></script>
 
 <div id="ajax_working" class="hidden" style="z-index: 10;">
