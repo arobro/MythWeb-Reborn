@@ -545,7 +545,10 @@
                              '</a>';
                     }
                     else {
-                        echo '<a href="', root_url, 'tv/list?time=', $_SESSION['list_time'] ?? time(), '">',
+                        $epg_time = filter_input(INPUT_GET, 'epg_time', FILTER_VALIDATE_INT);
+                        $listing_time = ($epg_time !== false && $epg_time > 0) ? $epg_time : ($_SESSION['list_time'] ?? time());
+
+                        echo '<a href="', root_url, 'tv/list?time=', $listing_time, '">',
                              t('Back to the program listing'),
                              '</a>';
                     }

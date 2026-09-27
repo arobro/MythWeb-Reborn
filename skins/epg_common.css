@@ -1,0 +1,452 @@
+/*
+ * MythWeb EPG - Common layout and behaviour
+*/
+
+.x-channel {
+    width: 120px;
+    height: 70px;
+    margin-bottom: 2px;
+    padding: 4px !important;
+    background-color: var(--channel-bg);
+    white-space: normal !important;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.x-channel a {
+    display: block;
+    text-align: center;
+    padding: 2px;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.x-channel .chan-num {
+    font-size: 11px;
+}
+
+.x-channel .x-preferred {
+    margin-left: 5px;
+    font-size: 200%;
+}
+
+#list_head {
+    width: 80%;
+    margin: 0 auto 0em auto;
+    top: 0;
+    z-index: 100;
+    padding: 10px 0;
+}
+
+#list_header {
+    width: 100%;
+    margin: 0;
+    background-color: var(--bg-color);
+}
+
+#x_current_time,
+#x_current_time_drag {
+    font-size: 150%;
+    margin-top: .25em;
+    float: left;
+}
+
+#x_current_time {
+    display: block;
+}
+#x_current_time_drag {
+    display: none;
+}
+
+.is-dragging #x_current_time {
+    display: none;
+}
+.is-dragging #x_current_time_drag {
+    display: block;
+}
+
+#x-jumpto {
+    float: right;
+}
+
+#x-jumpto td {
+    padding: .35em 1em;
+    vertical-align: middle;
+    white-space: nowrap;
+    border-left: 1px solid var(--border-dark);
+}
+
+#x-jumpto td.x-jumpto {
+    font-size: 110%;
+    font-weight: bold;
+}
+
+#x-jumpto td.x-hour select {
+    text-align: right;
+}
+
+#x-jumpto .x-day select {
+    text-align: center;
+}
+
+#x-jumpto a img {
+    vertical-align: middle;
+    height: 16px;
+    width: 16px;
+    margin-top: -2px;
+}
+
+#x-jumpto a {
+    height: 20px;
+    width: 20px;
+    padding: 2px;
+    border: 1px solid var(--border-dark);
+    background-color: var(--accent-green);
+    vertical-align: middle;
+    text-align: center;
+}
+
+#x-jumpto a:hover {
+    border: 1px solid var(--menu-border);
+    background-color: var(--accent-green-hover);
+}
+
+/* EPG Container Layout */
+.epg-container {
+    width: 100%;
+    border: none !important;
+    background: var(--surface-color);
+}
+
+#sticky_header_wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--bg-color);
+    width: 100%;
+}
+
+/* Unified Sticky Top Header Bar */
+.epg-header-sticky-bar {
+    position: relative;
+    z-index: 90;
+    display: flex;
+    background-color: var(--surface-color);
+}
+
+.epg-timeline-wrapper {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.epg-viewport-wrapper {
+    display: flex;
+    position: relative;
+}
+
+.epg-channels {
+    width: 120px;
+    flex-shrink: 0;
+    background: var(--surface-color);
+    z-index: 3;
+    border: none !important;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    margin-right: 2px;
+}
+
+.epg-scroll-container {
+    flex-grow: 1;
+    overflow-x: auto;
+    position: relative;
+    cursor: grab;
+    will-change: scroll-position;
+}
+
+.epg-scroll-container:active { cursor: grabbing; }
+.epg-scroll-container::-webkit-scrollbar { height: 8px; }
+.epg-scroll-container::-webkit-scrollbar-track { background: var(--bg-color); }
+.epg-scroll-container::-webkit-scrollbar-thumb { background: var(--border-dark); }
+
+.mythweb-timeline-row {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    background-color: var(--surface-color);
+    height: 28px;
+    border: none !important;
+}
+
+.mythweb-timeline-row .menu {
+    background-color: var(--menu-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Timeline Header Cells Aligned to Program Cards */
+.mythweb-timeline-row .time-cell {
+    flex: 1;
+    min-width: 0 !important;
+    height: 26px;
+    box-sizing: border-box !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 9pt;
+    color: var(--link-color);
+    padding: 2px 4px;
+    background-color: var(--menu-bg);
+    margin: 0;
+    border-right: 2px solid var(--bg-color);
+    border-radius: 0 !important;
+}
+
+.mythweb-timeline-row .time-cell:last-child {
+    margin-right: 0;
+    border-right: none !important; /* Removes border on the last time header cell */
+}
+
+.mythweb-timeline-row .time-cell:last-child {
+    margin-right: 0;
+}
+
+/* Default state (Normal/Wide Windows): Show full time (e.g., 3:00 PM, 3:15 PM) */
+.time-cell .time-hour-only {
+    display: none;
+}
+.time-cell .time-full {
+    display: inline;
+}
+
+
+@media screen and (max-width: 900px) {
+    /* Narrow the left sidebar containers */
+    .epg-channels,
+    #timelineLeftNav,
+    .x-channel {
+        width: 60px !important;
+    }
+
+    /* Adjust font size and padding for smaller channel boxes */
+    .x-channel {
+        padding: 2px !important;
+        font-size: 8pt;
+    }
+
+    /* Existing timeline time-cell adjustments */
+    .time-cell .time-full {
+        display: none;
+    }
+    .time-cell .time-hour-only {
+        display: inline;
+    }
+    .mythweb-timeline-row .time-cell {
+        border-right: none !important;
+    }
+    .mythweb-timeline-row .time-cell.is-hour-cell {
+        border-right: 2px solid var(--bg-color) !important;
+    }
+}
+
+.epg-grid-body {
+    position: relative;
+    user-select: none;
+    width: max-content;
+    min-width: 0 !important;
+}
+
+.channel-row {
+    height: 72px;
+    position: relative;
+    width: 100%;
+    border: none !important;
+}
+
+.programme-card {
+    position: absolute;
+    top: 0px;
+    bottom: 2px;
+    margin: 0;
+    padding: 3px 6px;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    box-sizing: border-box;
+    border-radius: 0;
+	border-right: 2px solid var(--bg-color);
+}
+
+.sliding-right-border {
+    display: none !important;
+}
+
+.prog-title,
+.prog-subtitle {
+    width: 100%; /* Ensure it respects the card's dynamic width */
+    white-space: nowrap; /* Keep text on a single line */
+    overflow: hidden; /* Hide overflow instead of leaving it visible */
+    text-overflow: ellipsis; /* Automatically append '...' */
+    box-sizing: border-box;
+    display: inline-block;
+}
+
+.programme-card.no-data-card .title-text {
+    display: inline-block;
+    width: 0;
+    word-break: normal;
+    white-space: normal;
+}
+
+.programme-card.no-data-card .left_arrow,
+.programme-card.no-data-card .right_arrow {
+    display: none !important;
+}
+
+.programme-card.text-hovered .prog-title,
+.programme-card.text-hovered .prog-subtitle {
+    color: var(--highlight-color) !important;
+    text-decoration: underline;
+    text-decoration-color: var(--highlight-color);
+}
+
+#modern_epg_tooltip {
+    position: fixed;
+    z-index: 999999;
+    display: none;
+    pointer-events: none;
+    width: 40em;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    color: var(--text-primary);
+    background-color: var(--menu-bg);
+    border: 2px ridge var(--tooltip-border);
+    padding: 5px;
+    box-shadow: 0px 4px 12px var(--shadow-color);
+}
+
+#modern_epg_tooltip dl.details_list {
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+
+#modern_epg_tooltip dl.details_list dt {
+    font-weight: bold;
+    float: left;
+    clear: left;
+    width: 100px;
+    text-align: right;
+    padding-right: 8px;
+    color: var(--link-color);
+    margin-bottom: 4px;
+}
+
+#modern_epg_tooltip dl.details_list dd {
+    margin: 0 0 4px 110px;
+    color: var(--text-primary);
+    word-wrap: break-word;
+}
+
+#modern_epg_tooltip dl.details_list::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.hdtv_icon2 {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    padding: 1px 3px;
+    font-size: 9pt;
+    color: var(--highlight-color);
+    display: inline;
+    font-weight: bold;
+}
+
+.left_arrow {
+    float: left;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.right_arrow {
+    position: absolute;
+    top: 4px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.epg-right-sidebar {
+    width: 120px;
+    flex-shrink: 0;
+    background: var(--surface-color);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    margin-left: 2px;
+}
+
+@media screen and (max-width: 1439px) {
+    .epg-right-sidebar {
+        width: 20px;
+    }
+}
+
+/* Navigation Arrows inside Sticky Bar */
+#timelineLeftNav {
+    width: 120px;
+    height: 26px;
+    margin-right: 2px;
+    background-color: var(--menu-bg);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+#timelineRightNav {
+    width: 120px;
+    height: 26px;
+    margin-left: 2px;
+    background-color: var(--menu-bg);
+    display: flex;
+    align-items: center;
+    padding-left: 4px;
+    justify-content: flex-start;
+    cursor: pointer;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+@media screen and (max-width: 1439px) {
+    #timelineRightNav {
+        width: 20px;
+    }
+}
+
+#timelineLeftNav:hover,
+#timelineRightNav:hover {
+    background-color: var(--nav-hover);
+}
+
+#timelineLeftNav img,
+#timelineRightNav img {
+    vertical-align: middle;
+}

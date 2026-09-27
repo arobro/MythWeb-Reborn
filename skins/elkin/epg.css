@@ -1,0 +1,22 @@
+@import url("../../epg_common.css");
+
+:root {
+    --bg-color: #ffffff;
+    --surface-color: #cccccc;
+    --menu-bg: #cccccc;
+    --menu-border: #bbbbbb;
+    --accent-green: #ffffff;
+    --accent-green-hover: #eeeeee;
+    --accent-box: #cccccc;
+    --text-primary: #444444;
+    --text-secondary: #777777;
+    --link-color: #777777;
+    --link-hover: #ff9933;
+    --border-dark: #bbbbbb;
+    --channel-bg: #dddddd;
+    --nav-hover: #bbbbbb;
+    --tooltip-border: #999999;
+    --highlight-color: #cc6600;
+    --shadow-color: rgba(0, 0, 0, 0.25);
+}
+
