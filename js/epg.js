@@ -1327,12 +1327,14 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		});
 
         if (window.mythTooltip) {
+            window.mythTooltip.options.targetSelector = '[data-tooltip], .programme-card .title-text, .programme-card .prog-subtitle';
             window.mythTooltip.options.delay = 200;
 
             window.mythTooltip.options.fetchData = function(element) {
-                if (element.classList.contains('programme-card')) {
-                    const chanId = element.getAttribute('data-chan-id');
-                    const startTime = element.getAttribute('data-start');
+                const card = element.closest('.programme-card');
+                if (card) {
+                    const chanId = card.getAttribute('data-chan-id');
+                    const startTime = card.getAttribute('data-start');
                     if (!chanId || !startTime) return null;
 
                     const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
@@ -1347,11 +1349,6 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 
                 return element.getAttribute('data-tooltip') || '';
             };
-        }
-
-        const container = document.getElementById('scrollContainer');
-        if (container && window.mythTooltip) {
-            container.addEventListener('scroll', () => window.mythTooltip.hide(), { passive: true });
         }
 	});
 

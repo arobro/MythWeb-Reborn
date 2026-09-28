@@ -270,6 +270,10 @@
     border: none !important;
 }
 
+.sliding-right-border {
+    display: none !important;
+}
+
 .programme-card {
     position: absolute;
     top: 0px;
@@ -292,6 +296,12 @@
 .programme-card .prog-subtitle {
     pointer-events: auto;
     display: inline-block;
+    width: fit-content !important;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
     color: inherit;
 }
 
@@ -300,10 +310,6 @@
 .programme-card:has(.prog-title:hover) .prog-subtitle,
 .programme-card:has(.prog-subtitle:hover) .prog-title {
     color: rgb(240, 240, 0);
-}
-
-.sliding-right-border {
-    display: none !important;
 }
 
 .prog-title,

@@ -59,7 +59,6 @@ EOF;
     <meta name="robots" content="noindex, nofollow">
 
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>theme.css">
-    <link rel="stylesheet" type="text/css" href="js/dialog/dialog.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/style.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/header.css">
     <link rel="stylesheet" type="text/css" href="<?php echo root_url ?>skins/tooltip.css">
