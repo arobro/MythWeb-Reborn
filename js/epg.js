@@ -1326,31 +1326,33 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 			}, 200);
 		});
 
-		// Instantiate the custom tooltip library
-		const epgTooltip = new LightTooltip({
-			tooltipId: 'modern_epg_tooltip',
-			container: '#gridBody',
-			targetSelector: '.programme-card:not(.no-data-card)',
-			delay: 200,
+        if (window.mythTooltip) {
+            window.mythTooltip.options.delay = 200;
 
-			fetchData: function(cardElem) {
-				const chanId = cardElem.getAttribute('data-chan-id');
-				const startTime = cardElem.getAttribute('data-start');
-				const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
+            window.mythTooltip.options.fetchData = function(element) {
+                if (element.classList.contains('programme-card')) {
+                    const chanId = element.getAttribute('data-chan-id');
+                    const startTime = element.getAttribute('data-start');
+                    if (!chanId || !startTime) return null;
 
-				updateAjaxStatus(1);
+                    const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
 
-				return fetch(url)
-					.then(res => res.json())
-					.then(data => data && data.info ? data.info : '')
-					.finally(() => updateAjaxStatus(-1));
-			}
-		});
+                    updateAjaxStatus(1);
 
-		const container = document.getElementById('scrollContainer');
-		if (container) {
-			container.addEventListener('scroll', () => epgTooltip.hide(), { passive: true });
-		}
+                    return fetch(url)
+                        .then(res => res.json())
+                        .then(data => data && data.info ? data.info : '')
+                        .finally(() => updateAjaxStatus(-1));
+                }
+
+                return element.getAttribute('data-tooltip') || '';
+            };
+        }
+
+        const container = document.getElementById('scrollContainer');
+        if (container && window.mythTooltip) {
+            container.addEventListener('scroll', () => window.mythTooltip.hide(), { passive: true });
+        }
 	});
 
 })();

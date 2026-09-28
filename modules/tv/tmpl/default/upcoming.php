@@ -29,39 +29,29 @@
 ?>
 
 <script type="text/javascript">
-    function load_tool_tip(element_id, channel_id, start_time) {
-        var element = $(element_id);
-        if (Tips.hasTip(element) == false) {
-            ajax_add_request();
-            new Ajax.Request('<?php echo defined('root_url') ? root_url : ''; ?>tv/get_show_details',
-                             {
-                                parameters: {
-                                                chanid:             channel_id,
-                                                starttime:          start_time,
-                                                ajax:               true
-                                            },
-                                onSuccess: add_tool_tip,
-                                method:    'get'
-                             });
+    document.addEventListener('DOMContentLoaded', function() {
+        const rootUrl = '<?php echo defined('root_url') ? root_url : ''; ?>';
+
+        // Override the auto-initialized mythTooltip's fetchData callback
+        if (window.mythTooltip) {
+            window.mythTooltip.options.fetchData = function(element) {
+                const chanId = element.getAttribute('data-chanid');
+                const startTime = element.getAttribute('data-starttime');
+
+                if (!chanId || !startTime) return null;
+
+                const url = `${rootUrl}tv/get_show_details?chanid=${encodeURIComponent(chanId)}&starttime=${encodeURIComponent(startTime)}&ajax=true`;
+
+                return fetch(url)
+                    .then(response => response.json())
+                    .then(data => data.info || '')
+                    .catch(err => {
+                        console.error('Error fetching show tooltip:', err);
+                        return '';
+                    });
+            };
         }
-    }
-
-    function add_tool_tip(content) {
-        ajax_remove_request();
-        var info = content.responseJSON;
-        if (Tips.hasTip($(info['id'])) == false) {
-            new Tip(info['id'], info['info'], { className: 'popup' });
-            attempt_to_show_tip(info['id']);
-        }
-    }
-
-    var currently_hovered_id = null;
-    var details_delay_timer_id = null;
-
-    function attempt_to_show_tip(element) {
-        if (element == currently_hovered_id)
-            Tips.showTip(element);
-    }
+    });
 </script>
 
 <form id="change_display" action="<?php echo defined('root_url') ? root_url : '' ?>tv/upcoming" method="post">
@@ -330,12 +320,6 @@
             }
         }
 
-    // A program id counter for popup info
-        if (!empty($_SESSION["show_popup_info"])) {
-            static $program_id_counter = 0;
-            $program_id_counter++;
-        }
-
     // Print a dividing row if grouping changes
 		$dateFormat = $_SESSION['date_listing_jump2'] ?? 'Y-m-d';
         if ($group_field == "airdate")
@@ -366,13 +350,14 @@
                     if ($show->starstring)
                         echo '<span class="starstring" style="float: right">'.$show->starstring.'</span>';
                 // Print the link to edit this scheduled recording
-                    echo '<a id="program-'.$show->chanid.'-'.$show->starttime.'"';
+                        echo '<a id="program-'.$show->chanid.'-'.$show->starttime.'"';
                     if (!empty($_SESSION["show_popup_info"])) {
-                        echo ' onmouseover = "currently_hovered_id = this.id; details_delay_timer_id = setTimeout(function () {load_tool_tip(\'program-'.$show->chanid.'-'.$show->starttime.'\',\''.$show->chanid.'\',\''.$show->starttime.'\');}, 250);"';
-                        echo ' onmouseout  = "currently_hovered_id = null; clearTimeout( details_delay_timer_id ); details_delay_timer_id = null;"';
+                        echo ' data-tooltip="true"';
+                        echo ' data-chanid="', html_entities($show->chanid), '"';
+                        echo ' data-starttime="', html_entities($show->starttime), '"';
                     }
                     else {
-						$timeFmt = $_SESSION['time_format2'] ?? 'g:i A';
+                        $timeFmt = $_SESSION['time_format2'] ?? 'g:i A';
                         $formattedStart = date($timeFmt, (int)$show->starttime);
                         $formattedEnd = date($timeFmt, (int)$show->endtime);
                         echo ' title="',html_entities($formattedStart

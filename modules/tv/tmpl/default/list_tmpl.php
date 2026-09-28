@@ -10,7 +10,7 @@
  **/
 
 $page_title = 'MythWeb - ' . t('Program Listing') . ': ' . date($_SESSION['date_statusbar2'] ?? 'Y-m-d H:i', $list_starttime);
-$headers[]  = '<link rel="stylesheet" type="text/css" href="'.skin_url.'/epg.css">';
+$headers[]  = '<link rel="stylesheet" type="text/css" href="'.root_url.'/skins/epg_common.css">';
 
 if (!isset($initial_epg_data)) {
     $initial_epg_data = array();
@@ -80,7 +80,6 @@ require 'modules/_shared/tmpl/'.tmpl.'/header.php';
     var SKIN_URL         = <?php echo json_encode(skin_url); ?>;
     var INITIAL_EPG_DATA = <?php echo json_encode($initial_epg_data); ?>;
 </script>
-<script src="<?php echo root_url ?>js/tooltip.js"></script>
 <script src="<?php echo root_url ?>js/epg.js"></script>
 
 <div id="ajax_working" class="hidden" style="z-index: 10;">

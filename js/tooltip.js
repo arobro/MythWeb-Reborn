@@ -37,10 +37,11 @@
             if (!elem) {
                 elem = document.createElement('div');
                 elem.id = this.options.tooltipId;
+                // Keep positioning styles structural only
                 elem.style.position = 'fixed';
                 elem.style.display = 'none';
-                elem.style.zIndex = '9999';
-                elem.style.pointerEvents = 'none'; // Avoid interfering with mouse events
+                elem.style.zIndex = '999999';
+                elem.style.pointerEvents = 'none';
                 document.body.appendChild(elem);
             }
             this.tooltipElem = elem;
@@ -172,4 +173,21 @@
 
     // Expose to Global / Window scope
     global.LightTooltip = LightTooltip;
+
+    if (typeof document !== 'undefined') {
+        const init = () => {
+            global.mythTooltip = new LightTooltip({
+                targetSelector: '[data-tooltip]',
+                container: document.body,
+                delay: 200,
+                offset: 20
+            });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    }
 })(typeof window !== 'undefined' ? window : this);

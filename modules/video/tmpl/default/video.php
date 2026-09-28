@@ -21,12 +21,42 @@
 ?>
 
 <script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', function() {
+        const rootUrl = '<?php echo defined('root_url') ? root_url : ''; ?>';
+
+        if (window.mythTooltip) {
+            window.mythTooltip.options.fetchData = function(element) {
+                const intId = element.getAttribute('data-intid');
+
+                if (!intId) return null;
+
+                const url = `${rootUrl}video/imdb?action=metadata&id=${encodeURIComponent(intId)}`;
+
+                return fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const video = data.metadata || {};
+                        return `
+                            <dl class="details_list">
+                                <dt><?php echo addslashes(t('Plot:')); ?></dt>     <dd>${video.plot || '&nbsp;'}</dd>
+                                <dt><?php echo addslashes(t('Rating:')); ?></dt>   <dd>${video.rating || '&nbsp;'}</dd>
+                                <dt><?php echo addslashes(t('Director:')); ?></dt> <dd>${video.director || '&nbsp;'}</dd>
+                                <dt><?php echo addslashes(t('Year:')); ?></dt>     <dd>${video.year || '&nbsp;'}</dd>
+                            </dl>
+                        `;
+                    })
+                    .catch(err => {
+                        console.error('Error fetching video details:', err);
+                        return '';
+                    });
+            };
+        }
+    });
 
     function newWindow(id) {
         $('window_title').innerHTML   = '<?php echo addslashes(t('Editing ')); ?> ' + $(id+'-title').childNodes[1].innerHTML;
         $('window_content').innerHTML = '<iframe src="<?php echo defined('root_url') ? root_url : ''; ?>video/edit?intid='+id+'">';
         $('window').show();
-        Tips.hideAll();
     }
 
     function imdb_lookup(id, title) {
@@ -87,7 +117,6 @@
 
             }
             $('window').show();
-            Tips.hideAll();
         }
     }
 
@@ -150,7 +179,6 @@
                 if (element != null & typeof(element) != 'undefined')
                     element.innerHTML = video[key];
         }
-        Tips.remove(video['intid']);
         ajax_remove_request();
     }
 
@@ -191,39 +219,6 @@
                 $(video.id).show();
         }
         ajax_remove_request();
-    }
-
-    var hovering_video_id = null;
-    var loading_popups    = new Array();
-
-    function video_popup(id) {
-        hovering_video_id = id;
-        if (!Tips.hasTip(id) && loading_popups[id] != true ) {
-            loading_popups[id] = true;
-            new Ajax.Request('<?php echo defined('root_url') ? root_url : ''; ?>video/imdb',
-                {
-                    method:     'get',
-                    parameters: {
-                        action: 'metadata',
-                        id:     id
-                        },
-                    onSuccess:  video_create_popup
-                });
-        }
-    }
-
-    function video_create_popup(result) {
-        var video    = result.responseJSON['metadata'];
-        var content  = '<dl class="details_list">'
-                     + '<dt><?php echo addslashes(t('Plot:')); ?></dt>     <dd>' + (video['plot'] ? video['plot'] : '&nbsp;')+'</dd>'
-                     + '<dt><?php echo addslashes(t('Rating:')); ?></dt>   <dd>' + (video['rating'] ? video['rating'] : '&nbsp;')+'</dd>'
-                     + '<dt><?php echo addslashes(t('Director:')); ?></dt> <dd>' + (video['director'] ? video['director'] : '&nbsp;')+'</dd>'
-                     + '<dt><?php echo addslashes(t('Year:')); ?></dt>     <dd>' + (video['year'] ? video['year'] : '&nbsp;')+'</dd>';
-                     + '</dl>';
-        new Tip(video['intid'], content, { className: 'popup' });
-        loading_popups[video['intid']] = false;
-        if (video['intid'] == hovering_video_id)
-            Tips.showTip(video['intid']);
     }
 
 // We currently do require a reload after a scan event
@@ -316,7 +311,7 @@
     if (isset($All_Videos) && is_iterable($All_Videos)) {
         foreach ($All_Videos as $video) {
 ?>
-    <div id="<?php echo $video->intid; ?>" class="video" onmouseover="video_popup(this.id)" onmouseout="hovering_video_id = null;">
+    <div id="<?php echo $video->intid; ?>" class="video" data-tooltip="true" data-intid="<?php echo $video->intid; ?>">
         <div id="<?php echo $video->intid; ?>_categoryid" class="hidden"><?php echo $video->category; ?></div>
         <div id="<?php echo $video->intid; ?>_genre" class="hidden"><?php if ($video->genres != null && (is_array($video->genres) || $video->genres instanceof Countable) && count($video->genres)) foreach ($video->genres as $genre) echo ' '.$genre.' ';?></div>
         <div id="<?php echo $video->intid; ?>_browse" class="hidden"><?php echo $video->browse; ?></div>

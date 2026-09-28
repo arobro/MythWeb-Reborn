@@ -1,0 +1,47 @@
+#light_tooltip {
+    position: fixed;
+    z-index: 999999;
+    display: none;
+    pointer-events: none;
+    width: 40em;
+    box-sizing: border-box;
+    font-size: 9pt;
+    color: var(--text-primary);
+    background-color: transparent; 
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+#light_tooltip dl.details_list {
+    margin: 0;
+    padding: 5px;
+    display: block;
+    min-width: 40em;
+    background-color: var(--menu-bg);
+    border: 2px ridge var(--tooltip-border);
+    box-shadow: 0px 4px 12px var(--shadow-color, rgba(0, 0, 0, 0.5));
+}
+
+#light_tooltip dl.details_list dt {
+    font-weight: bold;
+    float: left;
+    clear: left;
+    width: 100px;
+    text-align: right;
+    padding-right: 8px;
+    color: var(--link-color, #0099ff);
+    margin-bottom: 4px;
+}
+
+#light_tooltip dl.details_list dd {
+    margin: 0 0 4px 110px;
+    color: var(--text-primary, #ffffff);
+    word-wrap: break-word;
+}
+
+#light_tooltip dl.details_list::after {
+    content: "";
+    display: table;
+    clear: both;
+}

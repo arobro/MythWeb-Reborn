@@ -43,7 +43,6 @@ EOF;
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7">
     <base href="<?php echo root_url; ?>">
     <title><?php echo html_entities($page_title) ?></title>
 
@@ -59,26 +58,11 @@ EOF;
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="robots" content="noindex, nofollow">
 
-    <script type="text/javascript">
-        <!--
-        // -----------------------------------------------------------------------------
-        // Globals
-        // Major version of Flash required
-        var requiredMajorVersion = 9;
-        // Minor version of Flash required
-        var requiredMinorVersion = 0;
-        // Minor version of Flash required
-        var requiredRevision = 0;
-        // -----------------------------------------------------------------------------
-        // -->
-    </script>
-		
-
-    <link rel="stylesheet" type="text/css" href="js/prototip/prototip.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>theme.css">
     <link rel="stylesheet" type="text/css" href="js/dialog/dialog.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/style.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/header.css">
-    <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/menus.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo root_url ?>skins/tooltip.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/programming.css">
 
 <?php
@@ -88,7 +72,7 @@ EOF;
                 echo $header."\n";
 ?>
     <script type="text/javascript">
-        <!--
+	   <!--
         // -----------------------------------------------------------------------------
         // - Setup variables for use with the recommend engines
         // -----------------------------------------------------------------------------
@@ -113,13 +97,13 @@ EOF;
 
 	<script type="text/javascript"> jQuery.noConflict(); </script>
 	
-    <script type="text/javascript" src="js/prototip/prototip.js"></script>
     <script type="text/javascript" src="js/dialog/dialog.js"></script>
 	
     <script type="text/javascript" src="js/utils.js"></script>
     <script type="text/javascript" src="js/AC_OETags.js"></script>
     <script type="text/javascript" src="js/table_sort.js"></script>
-	<script type="text/javascript" src="js/recommend.js"></script>
+    <script type="text/javascript" src="js/recommend.js"></script>
+    <script src="<?php echo root_url ?>js/tooltip.js"></script>
 
 	
 <?php
@@ -212,7 +196,9 @@ EOF;
         <tr>
             <td><div id="command_choices">
                     <a href="" <?php
-                        echo show_popup('category_legend',$legend)
+                        if (!empty($Path[1]) && $Path[1] == 'list') {
+                           echo show_popup('category_legend', $legend);
+                        }
                         ?>>MythTV:</a> &nbsp; &nbsp;
                     <?php if (Modules::getModule('tv')) { ?>
                         <a href="tv/list"><?php echo t('Listings') ?></a>

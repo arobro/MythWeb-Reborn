@@ -34,9 +34,9 @@
         $PowerSearch = t('Search will perform complex SQL queries against the database as per the search phrase below');
 
         $SearchTypeHelp = <<<EOF
-<table width=\"400\" style=\"background-color: #003060;\" border=\"1\" cellpadding=\"0\" cellspacing=\"0\">
+<table width="400" style="background-color: #003060;" border="1" cellpadding="0" cellspacing="0">
 <tr>
-    <td><table width=\"400\" style=\"background-color: #003060;\" class=\"small\" cellpadding=\"5\" cellspacing=\"5\">
+    <td><table width="400" style="background-color: #003060;" class="small" cellpadding="5" cellspacing="5">
         <tr>
             <h3>$SearchTypeTitle</h3>
             <b>$TitleSearchTitle</b> <br>$TitleSearch<br>
