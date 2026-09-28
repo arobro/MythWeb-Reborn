@@ -136,13 +136,13 @@
            updateHomePage(list.VideoLookups[0]);
 
         // if we can pick the right item from the list then use it
-        // otherwise hich result
+        // otherwise display a dialog for the user to choose which result
         } else {
            var item = guessItem(list);
            if (item) {
                 updateMetadata(item);
            } else {
-                updateHomePage(fakeItem);
+                multipleResultDialog(list);
            }
         }
 
@@ -152,25 +152,13 @@
     // displays a dialog with an image and title of each possible show
     // if the user clicks on one of them then populates the metadata in the page
     function multipleResultDialog(list) {
-        // parent div for the result
-        var parent = new Element("div", {"class": "multiple-metadata"});
+        var container = $('multiple-metadata-container');
+        container.update(generateResults(list));
 
-        // add all of the results
-        parent.insert(generateResults(list));
-
-        // add a cancel "button" to exit without choosing an option
-        var a = new Element("a", {}).update("<?php echo t("Cancel") ?>");
-        Event.observe(a, "click", function() { Dialogs.close(); });
-        var d = new Element("div", {"class": "commands"});
-        d.insert(a);
-        parent.insert(d);
-
-        // display the dialog
-        new Dialog({
-                opacity: 0.9,
-                title: "<?php echo t("Select the correct show")?>",
-                content: parent
-                }).open();
+        var dialog = document.getElementById('multiple-results-dialog');
+        if (typeof dialog.showModal === "function") {
+            dialog.showModal();
+        }
     }
 
     // returns a div with a list of all of the items neatly formatted
@@ -190,7 +178,13 @@
         var div = new Element("div", {"class": "metadata-item"});
         Event.observe(div, "mouseover", function(e) { this.addClassName("hover");});
         Event.observe(div, "mouseout", function(e) { this.removeClassName("hover");});
-        Event.observe(div, "click", function(e) { updateMetadata(item); Dialogs.close();});
+        Event.observe(div, "click", function(e) {
+            updateMetadata(item);
+            var dialog = document.getElementById('multiple-results-dialog');
+            if (dialog && typeof dialog.close === "function") {
+                dialog.close();
+            }
+        });
         var img = generateItemImg(item);
         div.insert(img);
         var title = new Element("div", {"class": "title"});
@@ -237,19 +231,13 @@
     // displays a dialog with a message in it and an OK button
     function messageDialog(title, msg) {
         $("metadata-message").update(msg);
-        new Dialog({
-                opacity: 0.9,
-                title: title,
-                target:{
-                    id:'message-dialog',
-                    auto:true
-                }
-                }).open();
-
+        var dialog = document.getElementById('message-dialog');
+        if (typeof dialog.showModal === "function") {
+            dialog.showModal();
+        } else {
+            alert(title + ": " + msg);
+        }
     }
-
-    // Hook to start up the Dialog JS
-    Dialogs.load();
 
 // -->
 </script>
@@ -386,9 +374,20 @@
                 </fieldset>
             </dl>
 
-<div style="display: none;" id="message-dialog">
+<dialog id="message-dialog">
+   <div class="dialog-header"><?php echo t('Message') ?></div>
    <div id="metadata-message"></div>
-   <div class="commands">
-     <a onclick="Dialogs.close(); return false;"><?php echo t('OK') ?></a>
+   <form method="dialog" class="commands">
+     <button type="submit"><?php echo t('OK') ?></button>
+   </form>
+</dialog>
+
+<dialog id="multiple-results-dialog">
+   <div class="dialog-header"><?php echo t('Select the correct show') ?></div>
+   <div class="multiple-metadata">
+     <div id="multiple-metadata-container"></div>
+     <form method="dialog" class="commands">
+       <button type="submit"><?php echo t('Cancel') ?></button>
+     </form>
    </div>
-</div>
+</dialog>

@@ -1,0 +1,53 @@
+dialog::backdrop {
+    background-color: #506090;
+    opacity: 0.8;
+}
+
+dialog {
+    background-color: #265990;
+    border: 1px solid #203670;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+dialog .dialog-header {
+    background-color: #203670;
+    border: 1px solid #203670;
+    color: white;
+    font-weight: bold;
+    padding: 8px 12px;
+}
+
+dialog #metadata-message,
+dialog .multiple-metadata {
+    background-color: #265990;
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+dialog .commands {
+    background-color: #203670;
+    border-top: 1px solid #203670;
+    padding: 10px;
+    text-align: center;
+}
+
+dialog .commands button {
+    background-color: #265990;
+    color: white;
+    border: 1px solid #ffffff;
+    padding: 4px 15px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+dialog .commands button:hover {
+    background-color: #506090;
+}

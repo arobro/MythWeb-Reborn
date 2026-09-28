@@ -63,6 +63,7 @@ EOF;
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/style.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/header.css">
     <link rel="stylesheet" type="text/css" href="<?php echo root_url ?>skins/tooltip.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo root_url ?>skins/dialog.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/programming.css">
 
 <?php
@@ -96,9 +97,7 @@ EOF;
 ?>
 
 	<script type="text/javascript"> jQuery.noConflict(); </script>
-	
-    <script type="text/javascript" src="js/dialog/dialog.js"></script>
-	
+
     <script type="text/javascript" src="js/utils.js"></script>
     <script type="text/javascript" src="js/AC_OETags.js"></script>
     <script type="text/javascript" src="js/table_sort.js"></script>
