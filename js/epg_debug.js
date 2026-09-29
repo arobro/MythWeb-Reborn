@@ -115,8 +115,8 @@
     }
 
     window.addEventListener('keydown', function(e) {
-        const isD = e.key === 'd' || e.key === 'D' || e.code === 'KeyD' || e.keyCode === 68;
-        if (!isD) return;
+        const isCtrlD = (e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D' || e.code === 'KeyD' || e.keyCode === 68);
+        if (!isCtrlD) return;
 
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         if (activeTag === 'input' || activeTag === 'select' || activeTag === 'textarea' || document.activeElement.isContentEditable) {
