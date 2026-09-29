@@ -27,28 +27,32 @@ require 'modules/_shared/tmpl/'.tmpl.'/header.php';
     <div id="sticky_header_wrapper">
         <div id="list_header">
             <div id="list_head" class="clearfix">
-                <form class="form" id="program_listing" onsubmit="return false;">
-                    <div id="epg_time_status">
-                        <div id="x_current_time">
-                            <?php echo t('Currently Browsing:') . ' ' . date($_SESSION['date_statusbar2'] ?? 'Y-m-d h:i A', $list_starttime); ?>
-                        </div>
-                        <div id="x_current_time_drag">
-                            <?php echo t('Currently Browsing:'); ?> ...
-                        </div>
+			<form class="form" id="program_listing" onsubmit="return false;">
+                <div id="epg_time_status">
+                    <div id="x_current_time">
+                            <span id="lbl_currently_browsing"><?php echo t('Currently Browsing:'); ?></span>
+                        <?php echo ' ' . date($_SESSION['date_statusbar2'] ?? 'Y-m-d h:i A', $list_starttime); ?>
                     </div>
+                    <div id="x_current_time_drag">
+                            <span id="lbl_currently_browsing_drag"><?php echo t('Currently Browsing:'); ?></span>...
+                    </div>
+                </div>
+				<div class="jumpto-container">
+					<table id="x-jumpto" class="commandbox commands" border="0" cellspacing="0" cellpadding="0">
+						<tr>
+							<td class="x-jumpto"><span class='link' id="btn_jumpto"><?php echo t('Jump To') ?></span>:</td>
+							<td class="x-hour"><?php hour_select('id="hour_select"') ?></td>
+							<td class="x-day">
+								<a class="link" id="btn_prev_day"><img src="<?php echo skin_url ?>img/left.gif" alt="left"></a>
+								<?php date_select('id="date_select"') ?>
+								<a class="link" id="btn_next_day"><img src="<?php echo skin_url ?>img/right.gif" alt="right"></a>
+							</td>
+						</tr>
+					</table>
 
-                    <table id="x-jumpto" class="commandbox commands" border="0" cellspacing="0" cellpadding="0">
-                        <tr>
-                            <td class="x-jumpto"><span class='link' id="btn_jumpto"><?php echo t('Jump To') ?></span>:</td>
-                            <td class="x-hour"><?php hour_select('id="hour_select"') ?></td>
-                            <td class="x-day">
-                                <a class="link" id="btn_prev_day"><img src="<?php echo skin_url ?>img/left.gif" alt="left"></a>
-                                <?php date_select('id="date_select"') ?>
-                                <a class="link" id="btn_next_day"><img src="<?php echo skin_url ?>img/right.gif" alt="right"></a>
-                            </td>
-                        </tr>
-                    </table>
-                </form>
+					<span class="link" id="btn_back_to_top">&uarr;</span>
+				</div>
+			</form>
             </div>
         </div>
 

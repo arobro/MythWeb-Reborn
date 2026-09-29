@@ -318,26 +318,21 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 
 		if (!timelineHeader) return;
 
-		if (leftNav) {
-			leftNav.innerHTML = '';
-			const aLeft = document.createElement('a');
-			aLeft.className = 'link';
-			aLeft.onclick = function() {
-				window.EPG.shiftTimeHours(-3);
-			};
-			aLeft.innerHTML = '<img src="' + SKIN_URL + 'img/left.gif" alt="left">';
-			leftNav.appendChild(aLeft);
-		}
-		if (rightNav) {
-			rightNav.innerHTML = '';
-			const aRight = document.createElement('a');
-			aRight.className = 'link';
-			aRight.onclick = function() {
-				window.EPG.shiftTimeHours(3);
-			};
-			aRight.innerHTML = '<img src="' + SKIN_URL + 'img/right.gif" alt="right">';
-			rightNav.appendChild(aRight);
-		}
+        if (leftNav) {
+            leftNav.innerHTML = '<img src="' + SKIN_URL + 'img/left.gif" alt="left">';
+            leftNav.style.cursor = 'pointer';
+            leftNav.onclick = function() {
+                window.EPG.shiftTimeHours(-3);
+            };
+        }
+
+        if (rightNav) {
+            rightNav.innerHTML = '<img src="' + SKIN_URL + 'img/right.gif" alt="right">';
+            rightNav.style.cursor = 'pointer';
+            rightNav.onclick = function() {
+                window.EPG.shiftTimeHours(3);
+            };
+        }
 
 		timelineHeader.innerHTML = '';
 		const totalSlots = (EpgStore.maxLoadedTime - EpgStore.minLoadedTime) / SECONDS_PER_SLOT;
@@ -749,7 +744,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 				hour12: true,
 				timeZone: SERVER_TIMEZONE
 			}).format(dateObj);
-			browsingElem.innerText = 'Currently Browsing: ' + formatted;
+			browsingElem.innerHTML = '<a href="' + ROOT_URL + 'tv/list" class="cb-link"><span id="lbl_currently_browsing">Currently Browsing:</span></a> ' + formatted;
 		}
 
 		const hourSelect = document.getElementById('hour_select');
@@ -1393,4 +1388,42 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
         }
 	});
 
+
+	const stickyWrapper = document.getElementById('sticky_header_wrapper');
+	const btnBackToTop = document.getElementById('btn_back_to_top');
+
+	function updateBackToTopVisibility() {
+		if (!stickyWrapper) return;
+
+		if (window.scrollY > 50) {
+			stickyWrapper.classList.add('is-scrolled');
+		} else {
+			stickyWrapper.classList.remove('is-scrolled');
+		}
+	}
+
+	window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
+	updateBackToTopVisibility();
+
+	if (btnBackToTop) {
+		btnBackToTop.addEventListener('click', function(e) {
+			if (e && e.preventDefault) e.preventDefault();
+
+			window.scrollTo({
+				top: 0,
+				behavior: 'smooth'
+			});
+		});
+	}
+
+	const epgTimeStatus = document.getElementById('epg_time_status');
+	if (epgTimeStatus) {
+		epgTimeStatus.addEventListener('click', function(e) {
+			if (e.target && (e.target.id === 'lbl_currently_browsing' || e.target.closest('#lbl_currently_browsing'))) {
+				e.preventDefault();
+				e.stopPropagation();
+				window.location.href = ROOT_URL + 'tv/list';
+			}
+		});
+	}
 })();

@@ -70,7 +70,7 @@
 }
 
 #x-jumpto {
-    float: right;
+    float: none;
 }
 
 #x-jumpto td {
@@ -424,4 +424,46 @@
 #timelineLeftNav img,
 #timelineRightNav img {
     vertical-align: middle;
+}
+
+#program_listing {
+    display: flex;
+	flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+	gap: 10px;
+}
+
+.jumpto-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#btn_back_to_top {
+    display: none;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+#sticky_header_wrapper.is-scrolled #btn_back_to_top {
+    display: inline-block;
+}
+
+.cb-link {
+    cursor: pointer;
+    text-decoration: none;
+    pointer-events: none;
+    color: inherit;
+}
+
+#sticky_header_wrapper.is-scrolled .cb-link {
+    pointer-events: auto;
+}
+
+#sticky_header_wrapper.is-scrolled .cb-link:hover {
+    text-decoration: underline !important;
+    text-decoration-color: yellow !important;
+    color: yellow !important;
 }
