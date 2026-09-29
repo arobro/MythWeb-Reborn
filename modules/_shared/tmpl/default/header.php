@@ -176,7 +176,7 @@ EOF;
             <form action="tv/search" method="get">
                 <div id="simple_search">
                     <input type="hidden" name="type" value="q">
-                    <input id="search_text" type="text" name="s" size="15" value="<?php echo html_entities($_SESSION['search']['s']) ?>">
+                    <input id="search_text" type="text" name="s" size="15" value="">
                     <input id="search_submit" type="submit" class="submit" name="search" value="<?php echo t('Search') ?>">
                     (<a href="tv/search"><?php echo t('Advanced') ?></a>)
                 </div>
