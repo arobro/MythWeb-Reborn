@@ -10,7 +10,8 @@
  **/
 
 $page_title = 'MythWeb - ' . t('Program Listing') . ': ' . date($_SESSION['date_statusbar2'] ?? 'Y-m-d H:i', $list_starttime);
-$headers[]  = '<link rel="stylesheet" type="text/css" href="'.root_url.'/skins/epg_common.css">';
+$headers[] = '<link rel="stylesheet" type="text/css" href="' . root_url . '/skins/epg_common.css">' .
+             '<script src="' . root_url . 'js/epg_debug.js"></script>';
 
 if (!isset($initial_epg_data)) {
     $initial_epg_data = array();

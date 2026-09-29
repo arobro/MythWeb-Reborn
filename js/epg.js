@@ -5,6 +5,7 @@
 	const SECONDS_PER_SLOT = 15 * 60; // 900s per slot
 	const VISIBLE_SLOTS_IN_VIEW = 12; // 3 hours visible by default at full scale
 	const MAX_CACHE_SIZE = 150;
+	const CACHE_BUFFER_SECONDS = 2 * 60 * 60;
 
 	const EpgStore = {
 		channels: {},
@@ -860,9 +861,12 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 
 		setTimeout(function() {
 			UIState.suppressScrollEvents = false;
+
 			if (!skipHistory && container) {
 				container.dispatchEvent(new Event('scroll'));
 			}
+
+			ensureViewportBuffer();
 		}, 300);
 	}
 
@@ -928,13 +932,17 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 				if (container) container.scrollLeft = 0;
 				syncTimelinePosition(0);
 				syncHeaderAndDropdowns(targetTimestamp);
-				prefetchAdjacentWindows(targetTimestamp);
+				ensureViewportBuffer();
 				setTimeout(function() {
 					UIState.suppressScrollEvents = false;
 				}, 300);
 			});
 		} else {
 			scrollToTimestamp(targetTimestamp, true);
+
+			setTimeout(function() {
+				ensureViewportBuffer();
+			}, 50);
 		}
 	}
 
@@ -1054,27 +1062,66 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 			});
 	}
 
-	function prefetchAdjacentWindows(centerStartTime) {
-		const SECONDS_PER_HOUR = 3600;
-		const prevStart = EpgStore.minLoadedTime - (2 * SECONDS_PER_HOUR);
-		const nextStart = EpgStore.maxLoadedTime;
+    function ensureViewportBuffer(callback) {
+        const container = document.getElementById('scrollContainer');
 
-		function fetchForward() {
-			if (!EpgStore.loadedWindows[String(nextStart)]) {
-				console.log('[EPG Cache] Pre-fetching forward window starting at:', nextStart);
-				fetchWindow(nextStart, 'right');
-			}
-		}
+        if (!container || !UIState.totalWidthPx || UIState.totalWidthPx <= 0) {
+            if (typeof callback === 'function') callback();
+            return;
+        }
 
-		if (!EpgStore.loadedWindows[String(prevStart)]) {
-			console.log('[EPG Cache] Pre-fetching 2 hours BEFORE:', prevStart);
-			fetchWindow(prevStart, 'left', function() {
-				setTimeout(fetchForward, 0);
-			});
-		} else {
-			fetchForward();
-		}
-	}
+        if (UIState.isFetching) {
+            setTimeout(function() {
+                ensureViewportBuffer(callback);
+            }, 50);
+            return;
+        }
+
+        const totalSeconds = EpgStore.maxLoadedTime - EpgStore.minLoadedTime;
+        const scrollLeft = container.scrollLeft;
+        const viewportWidth = container.clientWidth;
+
+        const visibleStartTime = EpgStore.minLoadedTime +
+            Math.floor((scrollLeft / UIState.totalWidthPx) * totalSeconds);
+
+        const visibleEndTime = EpgStore.minLoadedTime +
+            Math.floor(((scrollLeft + viewportWidth) / UIState.totalWidthPx) * totalSeconds);
+
+        const requiredStartTime = visibleStartTime - CACHE_BUFFER_SECONDS;
+        const requiredEndTime = visibleEndTime + CACHE_BUFFER_SECONDS;
+
+        function fetchBefore() {
+            if (EpgStore.minLoadedTime <= requiredStartTime) {
+                fetchAfter();
+                return;
+            }
+
+            const windowStart = EpgStore.minLoadedTime - getWindowSeconds();
+
+            console.log('[EPG Cache] Pre-fetching 3 hours BEFORE:', windowStart);
+
+            fetchWindow(windowStart, 'left', function() {
+                fetchBefore();
+            });
+        }
+
+        function fetchAfter() {
+            if (EpgStore.maxLoadedTime >= requiredEndTime) {
+                if (typeof callback === 'function') callback();
+                return;
+            }
+
+            const windowStart = EpgStore.maxLoadedTime;
+
+            console.log('[EPG Cache] Pre-fetching 3 hours AFTER:', windowStart);
+
+            fetchWindow(windowStart, 'right', function() {
+                fetchAfter();
+            });
+        }
+
+        fetchBefore();
+    }
 
 	// ==================================================================
 	// 9. Event Listeners & Drag Engine
@@ -1198,18 +1245,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 					isScrollEnd: true
 				});
 
-				const needLeft = scrollLeft > 10 && visibleStartTime <= EpgStore.minLoadedTime + (4 * 3600);
-				const needRight = visibleEndTime >= EpgStore.maxLoadedTime - (4 * 3600);
-
-				if (needLeft && needRight) {
-					fetchWindow(EpgStore.minLoadedTime - getWindowSeconds(), 'left', function() {
-						fetchWindow(EpgStore.maxLoadedTime, 'right');
-					});
-				} else if (needLeft) {
-					fetchWindow(EpgStore.minLoadedTime - getWindowSeconds(), 'left');
-				} else if (needRight) {
-					fetchWindow(EpgStore.maxLoadedTime, 'right');
-				}
+				ensureViewportBuffer();
 			}, 100);
 		}, {
 			passive: true
@@ -1228,6 +1264,11 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 			if (!container) return;
 			const currentTs = pixelsToTime(container.scrollLeft);
 			navigateToTime(currentTs + (hours * 3600));
+		},
+		pixelsToTime: pixelsToTime,
+		getWindowSeconds: getWindowSeconds,
+		getStore: function() {
+			return EpgStore;
 		}
 	};
 
@@ -1242,7 +1283,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		initDragScroll();
 		initGridBodyDelegation();
 
-		prefetchAdjacentWindows(GRID_ORIGIN_TIME);
+		ensureViewportBuffer();
 		requestEllipsisUpdate();
 
 		const hourSelect = document.getElementById('hour_select');
