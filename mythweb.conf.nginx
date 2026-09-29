@@ -1,7 +1,6 @@
 ##
 # mythweb configuration for nginx
 # - Requires php-fpm to handle php
-# - Requires fcgiwrap to handle perl
 #
 # please modify before use
 ##
@@ -43,20 +42,16 @@ server {
 		fastcgi_pass	unix:/var/run/php/php7.3-fpm.sock;
 	}
 
-	location ~ \.pl {
-		include		fastcgi_params;
-		fastcgi_param   db_server localhost;
-		fastcgi_param   db_name  mythconverg;
-		fastcgi_param   db_login mythtv;
-		fastcgi_param   db_password mythtv;
-		fastcgi_pass    unix:/var/run/fcgiwrap.socket;
-	}
-
 	# Required rewrite rules
 	location @handler {
-		rewrite /(.+\.(php|pl))/.*      /$1 last;
-		rewrite /(pl(/.*)?)$            /mythweb.pl/$1 last;
-		rewrite /(.+)$                  /mythweb.php/$1 last;
-		rewrite /(.*)$                  /mythweb.php last;
+		rewrite ~* ^/(css|data|images|js|themes|skins|README|INSTALL|[a-zA-Z0-9_-]+\.(php|pl))(/|$) - last;
+		rewrite ^/(tn(/.*)?)$            /token.php/$1 last;
+		rewrite ^/(.+)$                  /mythweb.php/$1 last;
+		rewrite ^/(.*)$                  /mythweb.php last;
+	}
+
+	# Media types
+	types {
+		video/webm webm;
 	}
 }

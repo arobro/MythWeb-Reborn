@@ -51,19 +51,17 @@ $HTTP["host"] =~ "^mythweb" {
     "db_password" => "mythtv"
   )
 
-  # This makes sure that mythweb's perl files get run by the perl
-  # interpreter.
-
-  cgi.assign = (
-    ".pl"  => "/usr/bin/perl"
+  # Additional MIME types
+  mimetype.assign += (
+    ".webm" => "video/webm"
   )
 
   # The mythweb code relies on some URL rewriting.  This directive is
   # required.
 
   url.rewrite-once = (
-    "^/(css|data|images|js|themes|skins|[a-z_]+\.(php|pl)).*" => "$0",
-    "^/(pl(/.*)?)$" => "/mythweb.pl/$1",
+    "(?i)^/(css|data|images|js|themes|skins|README|INSTALL|[a-zA-Z0-9_-]+\.(php|pl))(/.*)?$" => "$0",
+    "^/(tn(/.*)?)$" => "/token.php/$1",
     "^/(.+)$"       => "/mythweb.php/$1",
     "^/(.*)$"       => "/mythweb.php"
   )
