@@ -14,95 +14,113 @@
 // No timeouts
     set_time_limit(0);
 
+// Validate input parameter types
+    $art_id  = filter_input(INPUT_GET, 'a', FILTER_VALIDATE_INT);
+    $song_id = filter_input(INPUT_GET, 'i', FILTER_VALIDATE_INT);
+
+    $path        = null;
+    $fname       = null;
+    $xml_command = null;
+    $xml_id      = null;
+
 // Album art?
-    if ($_GET['a']) {
+    if ($art_id) {
         list($path, $fname) = $db->query_row('SELECT md.path, ma.filename
                                                 FROM music_albumart AS ma
                                                      LEFT JOIN music_directories AS md
                                                             ON ma.directory_id=md.directory_id
                                                WHERE ma.albumart_id = ?',
-                                             $_GET['a']);
-    // Set the XML transfer command
+                                             $art_id);
         $xml_command = 'Content/GetAlbumArt';
-    // Set the XML transfer file id
-        $xml_id = $_GET['a'];
+        $xml_id      = $art_id;
     }
-
 // Music?
-    elseif ($_GET['i']) {
-    // Load some info about the song
+    elseif ($song_id) {
         list($path, $fname) = $db->query_row('SELECT md.path, ms.filename
                                                 FROM music_songs AS ms
                                                      LEFT JOIN music_directories AS md
                                                             ON ms.directory_id=md.directory_id
                                                WHERE ms.song_id = ?',
-                                             $_GET['i']);
-    // Update the play count
+                                             $song_id);
+
         $db->query('UPDATE music_songs
                        SET numplays = numplays + 1, lastplay = NOW()
                      WHERE song_id = ?',
-                   $_GET['i']);
-    // Set the XML transfer command
+                   $song_id);
+
         $xml_command = 'Content/GetMusic';
-    // Set the XML transfer file id
-        $xml_id = $_GET['i'];
+        $xml_id      = $song_id;
     }
 
 // Unknown request or empty file?
-    if (empty($fname))
+    if (empty($fname)) {
         exit;
+    }
 
-// HTTP stream?
+    $safe_fname = str_replace(array("\r", "\n", '"'), '', basename($fname));
+
+// HTTP stream redirect restriction
     if (preg_match('#^\w+://#', $fname)) {
-        redirect_browser($fname);
+        // Ensure redirect is only permitted for allowed protocols/hosts
+        if (preg_match('#^https?://#i', $fname)) {
+            redirect_browser($fname);
+        }
+        exit;
     }
 
-// Mime type
-    switch (substr($fname, -3)) {
-        case 'jpg':
-            $mime = 'image/jpeg';
-            break;
-        case 'gif':
-            $mime = 'image/gif';
-            break;
-        case 'png':
-            $mime = 'image/png';
-            break;
-        case 'mp3':
-            $mime = 'audio/mpeg';
-            break;
-        case 'ogg':
-            $mime = 'application/ogg';
-            break;
-        case 'm4a':
-            $mime = 'audio/mp4a-latm';
-            break;
-        default:
-            $mime = 'application/octet-stream';
+// Base music path setup
+    $basepath = realpath(setting('MusicLocation', hostname));
+    if (!$basepath) {
+        exit;
     }
-    header('Content-Type: '.$mime);
 
-// Send the filename
-    header('Content-Disposition: filename="'.$fname.'"');
+// Resolve real target file path to prevent Path Traversal
+    $target_file = realpath($basepath . '/' . $path . '/' . $fname);
 
-// Base music path
-    $basepath = setting('MusicLocation', hostname);
+    if ($target_file && strpos($target_file, $basepath) === 0 && file_exists($target_file)) {
+        
+        // Dynamic MIME type detection
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime  = finfo_file($finfo, $target_file) ?: 'application/octet-stream';
+        finfo_close($finfo);
 
-// Local file?
-    if (file_exists("$basepath/$path/$fname")) {
-        header('Content-Length: '.filesize("$basepath/$path/$fname"));
-        readfile("$basepath/$path/$fname");
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: inline; filename="' . $safe_fname . '"');
+        header('Content-Length: ' . filesize($target_file));
+
+        // Clear output buffer prior to reading binary stream
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        readfile($target_file);
     }
-// Otherwise, send it via the backend
+// Otherwise, route via backend
     else {
         $Master_Host = setting('MasterServerIP');
         $port = _or(get_backend_setting('BackendStatusPort', $Master_Host),
                     get_backend_setting('BackendStatusPort'));
-        if (stripos($Master_Host,':') !== false) {
-            $Master_Host = '['.$Master_Host.']';
+
+        if (stripos($Master_Host, ':') !== false) {
+            $Master_Host = '[' . $Master_Host . ']';
         }
-        readfile("http://$Master_Host:$port/$xml_command?Id=".$xml_id);
+
+        $backend_url = sprintf(
+            'http://%s:%d/%s?Id=%d',
+            $Master_Host,
+            (int)$port,
+            urlencode($xml_command),
+            (int)$xml_id
+        );
+
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: inline; filename="' . $safe_fname . '"');
+
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        readfile($backend_url);
     }
 
-// Nothing else to do
     exit;

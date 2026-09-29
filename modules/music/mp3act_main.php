@@ -64,7 +64,7 @@
   }
     <?php sajax_show_javascript(); ?></script>
     <script type="text/javascript" src="music/mp3act_js.js.php"></script>
-    <script type="text/javascript" src="music/mp3act_fat.js"></script>
+    <script type="text/javascript" src="<?php echo root_url ?>/js/mp3act_fat.js"></script>
 
 <div id="wrap">
     <div id="header">
@@ -104,6 +104,5 @@
     </div>
     <div class="clear"></div>
 </div>
-<iframe src="music/mp3act_hidden.php" frameborder="0" height="0" width="0" id="hidden" name="hidden"></iframe>
 <?php
 require 'modules/_shared/tmpl/'.tmpl.'/footer.php';

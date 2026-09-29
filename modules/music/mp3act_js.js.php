@@ -1,5 +1,5 @@
 <?php header('Content-Type: application/javascript; charset=utf-8');?>
-	  window.onload=function(){ init(); };
+      window.onload=function(){ init(); };
 
         function init(){
             setPageTitle();
@@ -280,9 +280,29 @@
                     document.getElementById("breadcrumb").innerHTML = new_data;
             }
 
-            function play(type,id){
-                    document.getElementById('hidden').src = null;
-                    document.getElementById("hidden").src = "<?php echo stream_url(); ?>mp3act_hidden.php?type="+type+"&id="+id;
+            function play(type, id) {
+                var streamUrl = "<?php echo root_url ?>/music/stream?i=" + id;
+                var player = document.getElementById("html5_audio_player");
+
+                if (!player) {
+                    player = document.createElement("audio");
+                    player.id = "html5_audio_player";
+                    player.controls = true;
+                    player.autoplay = true;
+
+                    player.style.position = "fixed";
+                    player.style.bottom = "10px";
+                    player.style.right = "10px";
+                    player.style.zIndex = "9999";
+                    player.style.boxShadow = "0px 4px 8px rgba(0,0,0,0.3)";
+
+                    document.body.appendChild(player);
+                }
+
+                player.src = streamUrl;
+                player.play().catch(function(error) {
+                    console.log("Autoplay failed or was blocked by browser:", error);
+                });
             }
 
             function randAdd(data){
