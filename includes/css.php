@@ -82,6 +82,11 @@
             $css_class[] = $matched_class;
         }
 
+        // Exception: If category contains "crime" and is NOT "Crime / Drama"
+        if (stripos($raw_cat, 'crime') !== false && !preg_match('/^\s*crime\s*[\/\-]\s*drama\s*$/i', $raw_cat)) {
+            $css_class[] = 'cat_Crime_True';
+        }
+
         return preg_replace('/ +/', ' ', implode(' ', $css_class));
     }
 /**

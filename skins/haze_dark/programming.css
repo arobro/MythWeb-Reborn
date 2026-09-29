@@ -61,6 +61,7 @@
 .cat_Children       { background-color: #95A314; } /*hsl(66,78%,36%)*/
 .cat_Comedy         { background-color: #516B0F; } /*hsl(77,75%,24%)*/
 .cat_Crime_Mystery  { background-color: #60A314; } /*hsl(88,78%,36%)*/
+.cat_Crime_True     { background-color: #093030; }
 .cat_Documentary    { background-color: #2D6B0F; } /*hsl(100,75%,24%)*/
 .cat_Drama          { background-color: #29A314; } /*hsl(111,78%,36%)*/
 .cat_Educational    { background-color: #0F6B12; } /*hsl(122,75%,24%)*/
