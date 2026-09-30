@@ -924,13 +924,20 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 
 			fetchWindow(targetTimestamp, 'jump', function() {
 				const container = document.getElementById('scrollContainer');
-				if (container) container.scrollLeft = 0;
-				syncTimelinePosition(0);
+
+				const totalSeconds = EpgStore.maxLoadedTime - EpgStore.minLoadedTime;
+				const offsetSeconds = targetTimestamp - EpgStore.minLoadedTime;
+				const targetScrollLeft = Math.max(0, (offsetSeconds / totalSeconds) * UIState.totalWidthPx);
+
+				if (container) container.scrollLeft = targetScrollLeft;
+				syncTimelinePosition(targetScrollLeft);
 				syncHeaderAndDropdowns(targetTimestamp);
-				ensureViewportBuffer();
-				setTimeout(function() {
-					UIState.suppressScrollEvents = false;
-				}, 300);
+
+				ensureViewportBuffer(function() {
+					setTimeout(function() {
+						UIState.suppressScrollEvents = false;
+					}, 300);
+				});
 			});
 		} else {
 			scrollToTimestamp(targetTimestamp, true);
@@ -1278,7 +1285,6 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		initDragScroll();
 		initGridBodyDelegation();
 
-		ensureViewportBuffer();
 		requestEllipsisUpdate();
 
 		const hourSelect = document.getElementById('hour_select');
@@ -1312,14 +1318,30 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 
 		const initialHashTime = parseHashTimestamp();
 		if (initialHashTime) {
-			navigateToTime(initialHashTime, {
-				replace: true
-			});
+			if (initialHashTime < EpgStore.minLoadedTime || initialHashTime >= EpgStore.maxLoadedTime) {
+				UIState.suppressScrollEvents = true;
+				resetGridForJump(initialHashTime);
+
+				fetchWindow(initialHashTime, 'jump', function() {
+					const container = document.getElementById('scrollContainer');
+					if (container) container.scrollLeft = 0;
+					syncTimelinePosition(0);
+					syncHeaderAndDropdowns(initialHashTime);
+
+					ensureViewportBuffer(function() {
+						setTimeout(function() {
+							UIState.suppressScrollEvents = false;
+						}, 300);
+					});
+				});
+			} else {
+				navigateToTime(initialHashTime, { replace: true });
+				ensureViewportBuffer();
+			}
 		} else {
-			window.history.replaceState({
-				epgTime: GRID_ORIGIN_TIME
-			}, '', window.location.href);
+			window.history.replaceState({ epgTime: GRID_ORIGIN_TIME }, '', window.location.href);
 			syncHeaderAndDropdowns(GRID_ORIGIN_TIME);
+			ensureViewportBuffer();
 		}
 
 		let resizeDebounceTimer = null;
