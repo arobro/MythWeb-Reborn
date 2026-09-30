@@ -60,7 +60,7 @@
 }
 
 /*
- * IE sucks:  true-height is supposed to be height+padding+margin+border, but IE
+ * true-height is supposed to be height+padding+margin+border, but IE
  * doesn't add in padding, so we have to create a wrapper container and use
  * margin instead of padding to make the "padding" that we need.
  */
