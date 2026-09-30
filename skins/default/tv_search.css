@@ -61,3 +61,45 @@
     white-space:        nowrap;
 }
 
+@media screen and (max-width: 600px) {
+    #search_options,
+    #search_options tbody,
+    #search_options tr,
+    #search_options td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #search_options td {
+        white-space: normal;
+        border-right: none !important;
+        border-bottom: 1px solid #304943;
+        padding: 0.75em 0.5em;
+    }
+
+    #search_options td.x-submit {
+        text-align: center;
+        border-bottom: none;
+    }
+
+    #x_search_name {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #search_results {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
+    #search_results th,
+    #search_results td,
+    #search_results td.x-airdate,
+    #search_results td.x-length {
+        white-space: normal;
+    }
+}
+

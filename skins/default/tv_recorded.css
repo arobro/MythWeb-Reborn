@@ -146,3 +146,63 @@
     margin-left:        1em;
     float:              left;
 }
+@media screen and (max-width: 600px) {
+    #title_choices,
+    #title_choices tbody,
+    #title_choices tr,
+    #title_choices td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #title_choices td {
+        white-space: normal;
+        padding: 0.5em;
+        border: none !important;
+    }
+
+    #recorded_list {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #recorded_list .x-originalairdate,
+    #recorded_list .x-programid,
+    #recorded_list .x-recgroup,
+    #recorded_list .-recgroup {
+        display: none !important;
+    }
+
+    #recorded_list td.x-pixmap a.x-download {
+        display: none !important;
+    }
+
+    #recorded_list td.x-pixmap {
+        width: 100px !important;
+    }
+
+    #recorded_list td.x-pixmap a.x-pixmap img {
+        width: 100px !important;
+        height: auto !important;
+    }
+
+    #recorded_list td.x-airdate,
+    #recorded_list td.x-length,
+    #recorded_list td.x-filesize,
+    #recorded_list td.x-commands {
+        white-space: normal;
+    }
+
+    #recorded_list td.x-commands a {
+        padding: 0.5em 0.75em;
+        margin: 0.25em 0;
+    }
+
+    #recorded_pager {
+        float: none;
+        margin: 1em 0;
+        text-align: center;
+    }
+}

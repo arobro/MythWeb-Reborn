@@ -57,6 +57,7 @@ EOF;
 
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="robots" content="noindex, nofollow">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
 
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>theme.css">
     <link rel="stylesheet" type="text/css" href="<?php echo skin_url ?>/style.css">
@@ -186,47 +187,45 @@ EOF;
     </div>
 </div>
 
+<div id="command_choices_container" class="menu menu_border_t menu_border_b">
+    <div id="command_choices">
+        <a href="" <?php
+            if (!empty($Path[1]) && $Path[1] == 'list') {
+                echo show_popup('category_legend', $legend);
+            }
+        ?>>MythTV:</a> &nbsp; &nbsp;
 
-<table id="command_choices_table" width="100%" border="0" cellspacing="2" cellpadding="0">
-<tr>
+        <?php if (Modules::getModule('tv')) { ?>
+            <a href="tv/list"><?php echo t('Listings') ?></a>
+            <span class="sep">&nbsp; | &nbsp;</span>
 
-    <td colspan="2" class="menu menu_border_t menu_border_b"><table class="body" width="100%" border="0" cellspacing="2" cellpadding="2">
-        <tr>
-            <td><div id="command_choices">
-                    <a href="" <?php
-                        if (!empty($Path[1]) && $Path[1] == 'list') {
-                           echo show_popup('category_legend', $legend);
-                        }
-                        ?>>MythTV:</a> &nbsp; &nbsp;
-                    <?php if (Modules::getModule('tv')) { ?>
-                        <a href="tv/list"><?php echo t('Listings') ?></a>
-                        &nbsp; | &nbsp;
-                        <a href="tv/searches"><?php echo t('Searches') ?></a>
-                        &nbsp; | &nbsp;
-                        <a href="tv/schedules"><?php echo t('Recording Schedules') ?></a>
-                        (<a href="tv/schedules/manual"><?php echo t('Manual') ?></a>,
-                        <a href="tv/schedules/custom"><?php echo t('Custom') ?></a>)
-                        &nbsp; | &nbsp;
-                        <a href="tv/upcoming"><?php echo t('Upcoming Recordings') ?></a>
-                        &nbsp; | &nbsp;
-                        <a href="tv/recorded"><?php echo t('Recorded Programs') ?></a>
-                        &nbsp; | &nbsp;
-						<?php if(setting('recommend_enabled', null)) { ?>
-						<a href="tv/recommended"><?php echo t('Recommended Programs') ?></a>
-                        &nbsp; | &nbsp;
-						<?php } ?>
-                    <?php } ?>
-                    <a href="status"><?php echo t('Backend Status') ?></a>
-<?php if (Modules::getModule('backend_log')) { ?>
-                    &nbsp; | &nbsp;
-                    <a href="backend_log"><?php echo t('Backend Logs') ?></a>
-<?php } ?>
-                </div></td>
-        </tr>
-        </table></td>
+            <a href="tv/searches"><?php echo t('Searches') ?></a>
+            <span class="sep">&nbsp; | &nbsp;</span>
 
-</tr>
-</table>
+            <a href="tv/schedules"><?php echo t('Recording Schedules') ?></a>
+            <span class="sub-links">(<a href="tv/schedules/manual"><?php echo t('Manual') ?></a>, <a href="tv/schedules/custom"><?php echo t('Custom') ?></a>)</span>
+            <span class="sep">&nbsp; | &nbsp;</span>
+
+            <a href="tv/upcoming"><?php echo t('Upcoming Recordings') ?></a>
+            <span class="sep">&nbsp; | &nbsp;</span>
+
+            <a href="tv/recorded"><?php echo t('Recorded Programs') ?></a>
+            <span class="sep">&nbsp; | &nbsp;</span>
+
+            <?php if(setting('recommend_enabled', null)) { ?>
+                <a href="tv/recommended"><?php echo t('Recommended Programs') ?></a>
+                <span class="sep">&nbsp; | &nbsp;</span>
+            <?php } ?>
+        <?php } ?>
+
+        <a href="status"><?php echo t('Backend Status') ?></a>
+
+        <?php if (Modules::getModule('backend_log')) { ?>
+            <span class="sep">&nbsp; | &nbsp;</span>
+            <a href="backend_log"><?php echo t('Backend Logs') ?></a>
+        <?php } ?>
+    </div>
+</div>
 
 <?php
 // Errors go here

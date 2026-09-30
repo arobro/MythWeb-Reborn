@@ -82,3 +82,49 @@ div.loadstatus {
 .joberrored  { color: #ff4444;  }
 .jobrunning  { color: #00ff00;  }
 
+@media screen and (max-width: 600px) {
+    #content_wrapper {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+
+    h1 {
+        font-size: 20px !important;
+        letter-spacing: 0.2em !important;
+        width: 100% !important;
+    }
+
+    h2 {
+        font-size: 16px !important;
+        letter-spacing: 0.15em !important;
+    }
+
+    div.content {
+        width: 100% !important;
+        box-sizing: border-box;
+        margin-bottom: 15px !important;
+    }
+
+    div.diskstatus,
+    div.loadstatus {
+        float: none !important;
+        width: 100% !important;
+        height: auto !important;
+        margin-bottom: 1em;
+    }
+
+    div.schedule a {
+        margin-right: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    div.schedule a:hover span {
+        position: static !important;
+        width: 100% !important;
+        margin-top: 0.5em !important;
+        box-sizing: border-box;
+    }
+}
+

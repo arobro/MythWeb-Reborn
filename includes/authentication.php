@@ -319,6 +319,7 @@ function renderAuthPage(string $error_msg = '', bool $no_password_set = false, b
   <meta charset="UTF-8">
   <title>Authentication Required</title>
   <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { background-color: #101a29; color: #ffffff; font-family: sans-serif; text-align: center; margin-top: 50px; }
     .card { background-color: #335555; border: 1px solid #9090b0; display: inline-block; padding: 20px; text-align: left; min-width: 340px; }
@@ -331,6 +332,18 @@ function renderAuthPage(string $error_msg = '', bool $no_password_set = false, b
     .nav-link { margin-top: 15px; text-align: center; }
     .nav-link a { color: #ffdd55; text-decoration: none; }
     .nav-link a:hover { text-decoration: underline; }
+
+    @media screen and (max-width: 480px) {
+        body { margin-top: 20px; padding: 0 10px; }
+        .card, .alert, .header {
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input[type="text"], input[type="password"] {
+            font-size: 16px; /* Prevents auto-zoom on mobile safari */
+        }
+    }
   </style>
 
 <script src="<?php echo root_url.'js/crypto-js.min.js' ?>" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

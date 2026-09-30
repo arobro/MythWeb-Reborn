@@ -98,3 +98,56 @@
 #listings td.x-recording a {
     border:             1px solid #0f0;
 }
+
+@media screen and (max-width: 600px) {
+    #display_options,
+    #display_options tbody,
+    #display_options tr,
+    #display_options td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #display_options td {
+        white-space: normal;
+        padding: 0.5em;
+    }
+
+    #display_options td.x-check label {
+        display: block;
+        padding: 0.6em 0.8em;
+        margin: 0.3em 0;
+        text-align: left;
+    }
+
+    #display_options td.x-check {
+        border-left: none;
+        height: auto;
+    }
+
+    /* Hide Record Length and Rec Group */
+    #listings th.x-recgroup,
+    #listings td.x-recgroup,
+    #listings th.x-length,
+    #listings td.x-length {
+        display: none;
+    }
+
+    /* Force Record Date & Airdate to break onto separate lines */
+    #listings td.x-recdate,
+    #listings td.x-airdate {
+        white-space: normal !important;
+        max-width: 110px;
+        word-break: normal;
+    }
+
+    #listings td.x-commands {
+        white-space: normal;
+    }
+
+    #listings td.x-commands a {
+        padding: 0.5em 0.75em;
+        margin: 0.25em 0;
+    }
+}
