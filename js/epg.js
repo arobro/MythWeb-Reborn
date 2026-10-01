@@ -1386,30 +1386,36 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 			}, 200);
 		});
 
-        if (window.mythTooltip) {
-            window.mythTooltip.options.targetSelector = '[data-tooltip], .programme-card .title-text, .programme-card .prog-subtitle';
-            window.mythTooltip.options.delay = 200;
+		if (window.mythTooltip) {
+			window.mythTooltip.options.targetSelector = '[data-tooltip], .programme-card';
+			window.mythTooltip.options.delay = 200;
 
-            window.mythTooltip.options.fetchData = function(element) {
-                const card = element.closest('.programme-card');
-                if (card) {
-                    const chanId = card.getAttribute('data-chan-id');
-                    const startTime = card.getAttribute('data-start');
-                    if (!chanId || !startTime) return null;
+			window.mythTooltip.options.fetchData = function(element) {
+				const card = element.closest('.programme-card');
+				if (card) {
+					const chanId = card.getAttribute('data-chan-id');
+					const startTime = card.getAttribute('data-start');
+					if (!chanId || !startTime) return null;
 
-                    const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
+					const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
 
-                    updateAjaxStatus(1);
+					updateAjaxStatus(1);
 
-                    return fetch(url)
-                        .then(res => res.json())
-                        .then(data => data && data.info ? data.info : '')
-                        .finally(() => updateAjaxStatus(-1));
-                }
+					return fetch(url)
+						.then(res => res.json())
+						.then(data => {
+							const html = data && data.info ? data.info : '';
+							if (EpgStore.detailsCache) {
+								EpgStore.detailsCache[cacheKey] = html;
+							}
+							return html;
+						})
+						.finally(() => updateAjaxStatus(-1));
+				}
 
-                return element.getAttribute('data-tooltip') || '';
-            };
-        }
+				return element.getAttribute('data-tooltip') || '';
+			};
+		}
 	});
 
 
