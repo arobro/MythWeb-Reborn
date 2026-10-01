@@ -14,14 +14,47 @@
 
 ---
 
-## 🚀 Getting Started
+## 📷 Preview
+![Screenshot](preview.webp)
 
+
+
+## 🚀 Getting Started
 
 ### Installation
 Please refer to the [INSTALL](INSTALL) document included in this repository.
 Visit the [MythTV Wiki Page](https://wiki.mythtv.org/wiki/MythWeb).
 
+
+### Qucik Start Installation
+sudo apt update
+sudo apt install apache2
+sudo apt install php-mythtv
+git clone https://github.com/arobro/MythWeb-Reborn.git
+
+# Move site
+sudo cp -r MythWeb-Reborn/mythweb /var/www/html/mythweb
+
+# Set Apache user (www-data) as owner
+sudo chown -R www-data:www-data /var/www/html/mythweb
+sudo chmod -R 755 /var/www/html/mythweb
+
+# Copy configuration to sites-available
+sudo cp /var/www/html/mythweb/mythweb.conf.apache /etc/apache2/sites-available/mythweb.conf
+
+# Edit database password and path settings
+sudo gedit /etc/apache2/sites-available/mythweb.conf
+
+# Restart
+sudo a2enmod rewrite env
+sudo a2ensite mythweb.conf
+sudo systemctl restart apache2
+
+# Restart
+Open http://127.0.0.1/mythweb and setup password.
 ---
+
+
 
 ## 📜 License
 
