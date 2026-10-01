@@ -312,14 +312,28 @@
     color: rgb(240, 240, 0);
 }
 
-.prog-title,
-.prog-subtitle {
-    width: 100%;
+.programme-card .prog-title-wrapper {
+    pointer-events: auto;
+    display: inline-block;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.programme-card .prog-title-wrapper:hover {
+    color: rgb(240, 240, 0);
+}
+
+.programme-card .prog-title,
+.programme-card .prog-subtitle {
+    pointer-events: auto;
+    display: inline-block;
+    width: fit-content !important;
+    max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
-    display: inline-block;
+    color: inherit;
 }
 
 .programme-card.no-data-card .title-text {

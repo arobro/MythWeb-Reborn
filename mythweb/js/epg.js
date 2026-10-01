@@ -453,6 +453,9 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		tempDiv.innerHTML = fullTitle;
 		const decodedTitle = tempDiv.textContent || tempDiv.innerText || fullTitle;
 
+		const titleWrapper = document.createElement('div');
+		titleWrapper.className = 'prog-title-wrapper';
+
 		const titleDiv = document.createElement('div');
 		titleDiv.className = 'prog-title';
 
@@ -462,14 +465,16 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		titleSpan.setAttribute('data-original-text', decodedTitle);
 
 		titleDiv.appendChild(titleSpan);
-		card.appendChild(titleDiv);
+		titleWrapper.appendChild(titleDiv);
 
 		if (prog.subTitle) {
 			const subDiv = document.createElement('div');
 			subDiv.className = 'prog-subtitle';
 			subDiv.textContent = prog.subTitle;
-			card.appendChild(subDiv);
+			titleWrapper.appendChild(subDiv);
 		}
+
+		card.appendChild(titleWrapper);
 
 		const extraDetails = [];
 		if (prog.hdtv) extraDetails.push('<span class="hdtv_icon2">HD</span>');
@@ -621,6 +626,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 	}
 
 	function updateCardTextTruncation(item, scrollLeft) {
+		const titleWrapper = item.card.querySelector('.prog-title-wrapper');
 		const titleDiv = item.titleDiv;
 		const textSpan = item.textSpan;
 		const subDiv = item.subDiv;
@@ -631,43 +637,62 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		}
 		const originalText = textSpan.getAttribute('data-original-text');
 
+		let originalSubText = '';
+		if (subDiv) {
+			if (!subDiv.getAttribute('data-original-text')) {
+				subDiv.setAttribute('data-original-text', subDiv.textContent);
+			}
+			originalSubText = subDiv.getAttribute('data-original-text');
+		}
+
 		const overlap = scrollLeft - item.cardLeft;
 
 		if (overlap > 0 && overlap < item.cardWidth) {
-			textSpan.textContent = originalText;
-			const visibleWidth = item.cardWidth - overlap - 12;
+			const remainingCardSpace = item.cardWidth - overlap;
+			const maxAllowedShift = Math.max(0, item.cardWidth - 24);
+			const shiftPx = Math.min(overlap, maxAllowedShift);
 
-			if (visibleWidth > 20) {
-				titleDiv.style.marginLeft = overlap + 'px';
-				titleDiv.style.width = visibleWidth + 'px';
+			if (titleWrapper) titleWrapper.style.marginLeft = shiftPx + 'px';
 
-				if (visibleWidth < 45) {
-					textSpan.textContent = '...';
-				}
+			const leftImg = titleDiv.querySelector('.left_arrow');
 
-				if (subDiv) {
-					subDiv.style.marginLeft = overlap + 'px';
-					subDiv.style.width = visibleWidth + 'px';
+			if (remainingCardSpace < 50) {
+				textSpan.textContent = '...';
+				titleDiv.style.width = 'auto';
+				if (leftImg) leftImg.style.display = 'none';
+			} else {
+				textSpan.textContent = originalText;
+				titleDiv.style.width = Math.max(0, remainingCardSpace - 12) + 'px';
+				if (leftImg) leftImg.style.display = '';
+			}
+
+			if (subDiv) {
+				if (remainingCardSpace < 50) {
+					subDiv.textContent = '...';
+					subDiv.style.width = 'auto';
+					subDiv.style.display = 'block';
+				} else {
+					subDiv.textContent = originalSubText;
+					subDiv.style.width = Math.max(0, remainingCardSpace - 12) + 'px';
 					subDiv.style.display = 'block';
 				}
-				if (extraDiv) {
-					extraDiv.style.marginLeft = overlap + 'px';
-					extraDiv.style.display = 'block';
-				}
-			} else {
-				titleDiv.style.marginLeft = '0px';
-				textSpan.textContent = '...';
-				if (subDiv) subDiv.style.display = 'none';
-				if (extraDiv) extraDiv.style.display = 'none';
+			}
+
+			if (extraDiv) {
+				extraDiv.style.marginLeft = shiftPx + 'px';
+				extraDiv.style.display = (remainingCardSpace < 35) ? 'none' : 'block';
 			}
 		} else {
-			titleDiv.style.marginLeft = '0px';
+			if (titleWrapper) titleWrapper.style.marginLeft = '0px';
 			titleDiv.style.width = '';
 			textSpan.textContent = originalText;
 
+			const leftImg = titleDiv.querySelector('.left_arrow');
+			if (leftImg) leftImg.style.display = '';
+
 			if (subDiv) {
-				subDiv.style.marginLeft = '0px';
 				subDiv.style.width = '';
+				subDiv.textContent = originalSubText;
 				subDiv.style.display = 'block';
 			}
 			if (extraDiv) {
@@ -1387,7 +1412,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		});
 
 		if (window.mythTooltip) {
-			window.mythTooltip.options.targetSelector = '[data-tooltip], .programme-card';
+			window.mythTooltip.options.targetSelector = '.programme-card .prog-title-wrapper';
 			window.mythTooltip.options.delay = 200;
 
 			window.mythTooltip.options.fetchData = function(element) {
@@ -1396,6 +1421,12 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 					const chanId = card.getAttribute('data-chan-id');
 					const startTime = card.getAttribute('data-start');
 					if (!chanId || !startTime) return null;
+
+					const cacheKey = chanId + '_' + startTime;
+
+					if (EpgStore.detailsCache && EpgStore.detailsCache[cacheKey]) {
+						return EpgStore.detailsCache[cacheKey];
+					}
 
 					const url = ROOT_URL + 'tv/get_show_details?chanid=' + chanId + '&starttime=' + startTime + '&ajax=true';
 
