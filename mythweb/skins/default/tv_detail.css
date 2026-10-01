@@ -320,3 +320,85 @@
 tr.new-date-group td {
     border-top: 2px solid #0056b3 !important;
 }
+
+
+@media screen and (max-width: 600px) {
+    #x-info,
+    #x-downloads {
+        float: none !important;
+        width: calc(100% - 20px) !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 10px auto !important;
+        box-sizing: border-box;
+        overflow-x: auto;
+    }
+
+    #x-info table {
+        width: 100% !important;
+        margin: 5px 0 !important;
+        border-collapse: collapse;
+    }
+
+    #x-title {
+        padding: 0.5em !important;
+    }
+
+    #x-title a {
+        font-size: 130% !important;
+        word-break: break-word;
+    }
+
+    #x-status th, #x-status td,
+    .x-extras th, .x-extras td,
+    #x-conflicts th, #x-conflicts td,
+    .x-links th, .x-links td,
+    #x-progflags td {
+        padding: 0.5em 0.6em !important;
+        white-space: normal !important;
+        word-break: break-word;
+    }
+
+    #x-status th, .x-extras th, #x-conflicts th, .x-links th {
+        text-align: left !important;
+    }
+
+    .x-channel {
+        width: 5em !important;
+        padding: 0.4em !important;
+    }
+
+    .x-channel img {
+        max-width: 100% !important;
+        height: auto;
+    }
+
+    #x-status td a,
+    #x-downloads div.x-jobs a {
+        float: none !important;
+        display: inline-block;
+        margin: 3px 3px 3px 0 !important;
+        padding: 6px 10px !important;
+        font-size: 0.9em;
+    }
+
+    #x-downloads div.x-links a {
+        position: static !important;
+        display: inline-block;
+        margin: 5px !important;
+        padding: 0.5em !important;
+    }
+
+    #x-downloads div.x-links a img {
+        position: static !important;
+    }
+
+    #metadata-home-page {
+        margin-left: 0 !important;
+    }
+
+    #feelings div {
+        float: left !important;
+        margin-right: 0.5em;
+    }
+}
