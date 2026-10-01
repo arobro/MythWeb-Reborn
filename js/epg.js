@@ -648,9 +648,11 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 				if (subDiv) {
 					subDiv.style.marginLeft = overlap + 'px';
 					subDiv.style.width = visibleWidth + 'px';
+					subDiv.style.display = 'block';
 				}
 				if (extraDiv) {
 					extraDiv.style.marginLeft = overlap + 'px';
+					extraDiv.style.display = 'block';
 				}
 			} else {
 				titleDiv.style.marginLeft = '0px';
