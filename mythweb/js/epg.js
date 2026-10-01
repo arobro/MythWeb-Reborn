@@ -635,6 +635,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		if (!textSpan.getAttribute('data-original-text')) {
 			textSpan.setAttribute('data-original-text', textSpan.textContent);
 		}
+
 		const originalText = textSpan.getAttribute('data-original-text');
 
 		let originalSubText = '';
@@ -649,52 +650,64 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 
 		if (overlap > 0 && overlap < item.cardWidth) {
 			const remainingCardSpace = item.cardWidth - overlap;
-			const maxAllowedShift = Math.max(0, item.cardWidth - 24);
-			const shiftPx = Math.min(overlap, maxAllowedShift);
+			const shiftPx = Math.min(overlap, Math.max(0, item.cardWidth - 24));
+			const availableWidth = Math.max(0, remainingCardSpace - 12);
 
-			if (titleWrapper) titleWrapper.style.marginLeft = shiftPx + 'px';
+			if (titleWrapper) {
+				titleWrapper.style.marginLeft = shiftPx + 'px';
+				titleWrapper.style.maxWidth = availableWidth + 'px';
+			}
+
+			titleDiv.style.width = availableWidth + 'px';
+			titleDiv.style.maxWidth = availableWidth + 'px';
+
+			textSpan.textContent = originalText;
+			textSpan.style.width = availableWidth + 'px';
+			textSpan.style.maxWidth = availableWidth + 'px';
 
 			const leftImg = titleDiv.querySelector('.left_arrow');
 
-			if (remainingCardSpace < 50) {
-				textSpan.textContent = '...';
-				titleDiv.style.width = 'auto';
-				if (leftImg) leftImg.style.display = 'none';
-			} else {
-				textSpan.textContent = originalText;
-				titleDiv.style.width = Math.max(0, remainingCardSpace - 12) + 'px';
-				if (leftImg) leftImg.style.display = '';
+			if (leftImg) {
+				leftImg.style.display = '';
 			}
 
 			if (subDiv) {
-				if (remainingCardSpace < 50) {
-					subDiv.textContent = '...';
-					subDiv.style.width = 'auto';
-					subDiv.style.display = 'block';
-				} else {
-					subDiv.textContent = originalSubText;
-					subDiv.style.width = Math.max(0, remainingCardSpace - 12) + 'px';
-					subDiv.style.display = 'block';
-				}
+				subDiv.textContent = originalSubText;
+				subDiv.style.width = availableWidth + 'px';
+				subDiv.style.maxWidth = availableWidth + 'px';
+				subDiv.style.display = 'block';
 			}
 
 			if (extraDiv) {
 				extraDiv.style.marginLeft = shiftPx + 'px';
-				extraDiv.style.display = (remainingCardSpace < 35) ? 'none' : 'block';
+				extraDiv.style.display = availableWidth < 35 ? 'none' : 'block';
 			}
 		} else {
-			if (titleWrapper) titleWrapper.style.marginLeft = '0px';
+			if (titleWrapper) {
+				titleWrapper.style.marginLeft = '0px';
+				titleWrapper.style.maxWidth = '';
+			}
+
 			titleDiv.style.width = '';
+			titleDiv.style.maxWidth = '';
+
 			textSpan.textContent = originalText;
+			textSpan.style.width = '';
+			textSpan.style.maxWidth = '';
 
 			const leftImg = titleDiv.querySelector('.left_arrow');
-			if (leftImg) leftImg.style.display = '';
+
+			if (leftImg) {
+				leftImg.style.display = '';
+			}
 
 			if (subDiv) {
 				subDiv.style.width = '';
+				subDiv.style.maxWidth = '';
 				subDiv.textContent = originalSubText;
 				subDiv.style.display = 'block';
 			}
+
 			if (extraDiv) {
 				extraDiv.style.marginLeft = '0px';
 				extraDiv.style.display = 'block';

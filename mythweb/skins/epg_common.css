@@ -296,7 +296,7 @@
 .programme-card .prog-subtitle {
     pointer-events: auto;
     display: inline-block;
-    width: fit-content !important;
+    width: auto;
     max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
