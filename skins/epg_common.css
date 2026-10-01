@@ -324,7 +324,7 @@
 
 .programme-card.no-data-card .title-text {
     display: inline-block;
-    width: 0;
+    width: auto !important;
     word-break: normal;
     white-space: normal;
 }
