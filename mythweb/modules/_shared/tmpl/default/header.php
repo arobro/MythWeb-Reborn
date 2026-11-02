@@ -71,19 +71,7 @@ EOF;
         foreach ($headers as $header)
             if (strpos($header, 'text/css') !== false)
                 echo $header."\n";
-?>
-    <script type="text/javascript">
-	   <!--
-        // -----------------------------------------------------------------------------
-        // - Setup variables for use with the recommend engines
-        // -----------------------------------------------------------------------------
-        var recommend_enabled   = "<?php echo setting('recommend_enabled', null); ?>";
-        var recommend_server    = "<?php echo setting('recommend_server', null); ?>";
-        var recommend_key       = "<?php echo setting('recommend_key', null); ?>";
-        // -->
-    </script>
 
-<?php
     if (setting('mythweb_use_cdn', null))
     {
 	    print "<script src=\"https://ajax.googleapis.com/ajax/libs/prototype/1.7.3.0/prototype.js\"></script>";
@@ -101,7 +89,6 @@ EOF;
     <script type="text/javascript" src="js/utils.js"></script>
     <script type="text/javascript" src="js/AC_OETags.js"></script>
     <script type="text/javascript" src="js/table_sort.js"></script>
-    <script type="text/javascript" src="js/recommend.js"></script>
     <script src="<?php echo root_url ?>js/tooltip.js"></script>
 
 	
@@ -211,11 +198,6 @@ EOF;
 
             <a href="tv/recorded"><?php echo t('Recorded Programs') ?></a>
             <span class="sep">&nbsp; | &nbsp;</span>
-
-            <?php if(setting('recommend_enabled', null)) { ?>
-                <a href="tv/recommended"><?php echo t('Recommended Programs') ?></a>
-                <span class="sep">&nbsp; | &nbsp;</span>
-            <?php } ?>
         <?php } ?>
 
         <a href="status"><?php echo t('Backend Status') ?></a>

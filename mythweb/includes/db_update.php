@@ -54,10 +54,6 @@
                 setting('WebDBSchemaVer',    null, ++$db_vers, false);
 				
 			case 3:
-				setting('recommend_enabled', null, false);
-				setting('recommend_server', null, 'http://myth-recommendations.aws.af.cm/');
-				setting('recommend_key', null, 'REQUIRED');
-				
                 setting('WebDBSchemaVer',    null, ++$db_vers, false);
 
             case 4:

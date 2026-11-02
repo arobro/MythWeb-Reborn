@@ -14,7 +14,6 @@
                                  'choices' => array('session'   => t('My Session'),
                                                     'defaults'  => t('MythWeb Defaults'),
                                                     'flvplayer' => t('Video Playback'),
-                                                    'recommend' => t('Recommend Videos'),
                                                    ),
                                  'default' => 'session',
                                 );
