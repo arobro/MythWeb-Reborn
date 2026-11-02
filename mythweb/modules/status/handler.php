@@ -11,7 +11,7 @@
  **/
 
 // Get the address/port of the master machine, enclose IPv6 with []
-    $masterhost = preg_replace('@(.*?:.*)@', "[$1]", setting('MasterServerIP'));
+    $masterhost = _or(preg_replace('@(.*?:.*)@', "[$1]", setting('MasterServerName')), "127.0.0.1");
     $statusport = setting('BackendStatusPort', '%');
 
 // XML mode?
