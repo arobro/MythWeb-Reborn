@@ -377,17 +377,17 @@
 <dialog id="message-dialog">
    <div class="dialog-header"><?php echo t('Message') ?></div>
    <div id="metadata-message"></div>
-   <form method="dialog" class="commands">
-     <button type="submit"><?php echo t('OK') ?></button>
-   </form>
+   <div class="commands">
+     <button type="button" onclick="document.getElementById('message-dialog').close()"><?php echo t('OK') ?></button>
+   </div>
 </dialog>
 
 <dialog id="multiple-results-dialog">
    <div class="dialog-header"><?php echo t('Select the correct show') ?></div>
    <div class="multiple-metadata">
      <div id="multiple-metadata-container"></div>
-     <form method="dialog" class="commands">
-       <button type="submit"><?php echo t('Cancel') ?></button>
-     </form>
+     <div class="commands">
+       <button type="button" onclick="document.getElementById('multiple-results-dialog').close()"><?php echo t('Cancel') ?></button>
+     </div>
    </div>
 </dialog>
