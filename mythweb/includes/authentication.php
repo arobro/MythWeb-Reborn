@@ -1,16 +1,4 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.cookie_samesite', 'Strict');
-    ini_set('session.use_strict_mode', 1);
-
-    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-        ini_set('session.cookie_secure', 1);
-    }
-
-    session_start();
-}
-
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -291,6 +279,12 @@ if (isset($_POST['access_password'])) {
 
 if (empty($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     renderAuthPage("");
+}
+
+if (empty($_SESSION['user_token']) ||
+	!$db->query_col('SELECT COUNT(*) FROM mythweb_users WHERE token = ?', [$_SESSION['user_token']])) {
+	$_SESSION = [];
+	renderAuthPage("");
 }
 
 if (isset($_SESSION['last_activity']) && ($now - $_SESSION['last_activity'] > SESSION_TIMEOUT_SECONDS)) {

@@ -10,7 +10,16 @@
  *
  **/
 
-    header('Content-Type: image/jpg');
+    header('Content-Type: image/jpeg');
 
     $url = $_REQUEST['url'] ?? '';
-    echo @file_get_contents("http://www.thetvdb.com" . $url);
+
+    if (strpos($url, '..') !== false || strpos($url, '//') !== false) {
+        exit('Invalid URL');
+    }
+
+    $image = @file_get_contents("https://www.thetvdb.com" . $url);
+
+    if ($image !== false) {
+        echo $image;
+    }

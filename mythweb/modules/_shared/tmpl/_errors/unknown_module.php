@@ -24,7 +24,7 @@
 <h2>An unknown module was specified</h2>
 
 <p>
-<?php echo $Path[0] ?>
+<?php echo htmlspecialchars($Path[0], ENT_QUOTES, 'UTF-8'); ?>
 </p>
 
 </div>

@@ -16,7 +16,7 @@ if (empty($_REQUEST['host'])) {
 $frontend = $Frontends[$_REQUEST['host']];
 if (empty($frontend)) {
     header('HTTP/1.0 400 Bad Request');
-    echo 'Unknown host:  '.$_REQUEST['host'];
+    echo 'Unknown host:  ' . htmlspecialchars($_REQUEST['host'], ENT_QUOTES, 'UTF-8');
     exit;
 }
 

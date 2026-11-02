@@ -22,7 +22,12 @@
     }
 
     if (!empty($_POST['set_current_session_as_default'])) {
-        $session_data = function_exists('session_encode') ? @session_encode() : serialize($_SESSION);
+        $backup = $_SESSION;
+        foreach (['authenticated','user_token','csrf_token','login_nonces','last_activity'] as $k) {
+            unset($_SESSION[$k]);
+        }
+        $session_data = session_encode();
+        $_SESSION = $backup;               // restore so the current user stays logged in
         sess_write('default', $session_data);
     } elseif (!empty($_POST['clear_current_default_session'])) {
         sess_destroy('default');
