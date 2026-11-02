@@ -75,16 +75,12 @@ EOF;
     if (setting('mythweb_use_cdn', null))
     {
 	    print "<script src=\"https://ajax.googleapis.com/ajax/libs/prototype/1.7.3.0/prototype.js\"></script>";
-	    print "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js\"></script>";
     }
     else
     {
         print "<script type=\"text/javascript\" src=\"js/ajax/libs/prototype/1.7.3.0/prototype.js\"></script>";
-        print "<script type=\"text/javascript\" src=\"js/ajax/libs/jquery/3.2.1/jquery.min.js\"></script>";
     }
 ?>
-
-	<script type="text/javascript"> jQuery.noConflict(); </script>
 
     <script type="text/javascript" src="js/utils.js"></script>
     <script type="text/javascript" src="js/AC_OETags.js"></script>
