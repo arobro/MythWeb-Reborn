@@ -1425,7 +1425,7 @@ function getTimestampForServerTime(year, month, day, hour, minute) {
 		});
 
 		if (window.mythTooltip) {
-			window.mythTooltip.options.targetSelector = '.programme-card .prog-title-wrapper';
+			window.mythTooltip.options.targetSelector = '[data-tooltip], .programme-card .prog-title-wrapper';
 			window.mythTooltip.options.delay = 200;
 
 			window.mythTooltip.options.fetchData = function(element) {
