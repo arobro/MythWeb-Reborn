@@ -105,7 +105,8 @@
     $prev_group = '';
     $cur_group  = '';
 
-    $offset = $_REQUEST['offset'] ?? 0;
+    $offset = (int) ($_REQUEST['offset'] ?? 0);
+    $paging = (int) ($_SESSION['recorded_paging'] ?? 0);
     $rows = $offset;
 
     if (is_array($All_Shows)) {
@@ -115,7 +116,7 @@
             if (is_null($show))
                 continue;
 
-            if (isset($_SESSION['recorded_paging']) && $_SESSION['recorded_paging'] > 0 && $rows > 0) {
+            if ($paging > 0 && $rows > 0) {
                 $rows--;
                 continue;
             }
@@ -263,7 +264,7 @@ EOM;
         // Increment row last
             $row++;
         // Only display as many as requested
-            if (isset($_SESSION['recorded_paging']) && $_SESSION['recorded_paging'] > 0 && $row >= $_SESSION['recorded_paging'])
+            if ($paging > 0 && $row >= $paging)
                 break;
         }
     }
@@ -273,10 +274,10 @@ EOM;
 
 <div id="recorded_pager">
 <?php
-    if (isset($_SESSION['recorded_paging']) && $_SESSION['recorded_paging'] > 0 && is_array($All_Shows)) {
+    if ($paging > 0 && is_array($All_Shows)) {
         echo 'Pages - ';
-        $total_pages = ceil(count($All_Shows)/$_SESSION['recorded_paging']);
-        $current_page = (isset($_REQUEST['offset']) ? $_REQUEST['offset'] : 0) / $_SESSION['recorded_paging'];
+        $total_pages = ceil(count($All_Shows) / $paging);
+        $current_page = $offset / $paging;
         for ($i = 1; $i <= $total_pages; $i++) {
             $query = '';
             foreach($_GET as $key => $value) {
@@ -284,7 +285,7 @@ EOM;
                     continue;
                 $query .= urlencode($key).'='.urlencode($value).'&';
             }
-            $query .= 'offset='.(($i-1)*$_SESSION['recorded_paging']);
+            $query .= 'offset='.(($i-1) * $paging);
             if ($i != 1)
                 echo ' | ';
             echo '<a href="'.root_url.'tv/recorded?'.$query.'">'.$i.'</a>';
